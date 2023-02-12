@@ -17,6 +17,23 @@ class SQL:
 
         return dict_city
 
+    def insert_train(self, train):
+        self.cursor.execute('''INSERT INTO train
+                            (nickname, train_type, type_wagon, max_pas/weight, count_wagons, average_speed)
+                            VALUES (?,?,?,?,?,?)''',
+                            (train.nickname, train.train_type, train.type_wagons, train.max, train.count_wagons, train.average_speed))
+        self.conn.commit()
+        self.cursor.close()
+
+    def insert_schedule(self, schedule):
+        self.cursor.execute('''INSERT INTO schedule
+                            (nickname, date_sending, date_arrival, time_sending, time_arrival, time_travel, train_type)
+                            VALUES (?,?,?,?,?,?,?)''',
+                            (schedule.nickname, schedule.date_departures, schedule.date_arrival, schedule.time_departures,
+                             schedule.time_arrival, schedule.time_travel, schedule.train_type))
+        self.conn.commit()
+        self.cursor.close()
+
 # sql = SQL()
 # for key, value in sql.select_cities().items():
 #     print(key, value)
