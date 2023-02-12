@@ -169,9 +169,23 @@ class CreateRoute(tk.Toplevel):  # создать маршрут
         return window_train
 
     def save(self):
+        otk = self.combo2.get()
+        kud = self.combo3.get()
         nickname = self.combo2.get() + ' - ' + self.combo3.get()  # название поезда
         train_type = self.combo1.get()  # тип поезда пассажирский/грузовой
-        max_capacity_pas = 12  # максималтная вместимость пассажиров
-        type_passenger_train = self.combo6.get()  # тип поезда общий/плацкарт/купе либо вагонов открытый/закрытый
+        type_wagons = self.combo6.get()  # тип поезда общий/плацкарт/купе либо вагонов открытый/закрытый
+        max = 12  # максималтная вместимость пассажиров
         count_wagons = self.combo7.get()  # кол-во вагонов
-        date_departures = self.combo4.get() + '.' + self.combo4.get() + '.' + str(self.value_year)  # дата отправления
+        average_speed = 100
+        date_departures = self.combo4.get() + '-' + self.combo4_1.get() + '-' + self.value_year.get()  # дата отправления
+        time_departures = self.combo5.get() + ':' + self.combo5_1.get()  # время отправления
+        distance = merger.formul_distance(otk, kud)  # по ккординатам откуда/куда, высчитываем расстояние
+        #merger.create_train(nickname, train_type, type_wagons, max, count_wagons, average_speed)  # создали поезд
+        print(f'Название поезда - {nickname} \n'
+              f'Тип поезда - {train_type} \n'
+              f'Максимальная нагрузка - {max} \n'
+              f'Тип вагонов - {type_wagons} \n'
+              f'Кол-во вагонов - {count_wagons} \n'
+              f'Дата отправления - {date_departures} \n'
+              f'Время отправления - {time_departures} \n'
+              f'Расстояние от А до Б - {distance}')
