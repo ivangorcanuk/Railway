@@ -33,6 +33,7 @@ class Passenger(MainInf):  # пассажирский
     max = Instrumen()  # максималтная вместимость пассажиров
     type_wagons = Instrumen()  # тип поезда общий/плацкарт/купе
     count_wagons = Instrumen()  # кол-во вагонов
+    list_type_wagons = ['общий', 'плацкарт', 'купе']
 
     def __init__(self, nickname, train_type, type_wagons, max, count_wagons, average_speed):
         super().__init__(nickname, train_type, average_speed)
@@ -45,6 +46,7 @@ class Cargo(MainInf):  # грузовой
     max = Instrumen()  # максималтно перевозимый вес
     type_wagons = Instrumen()  # тип вагонов открытый/закрытый
     count_wagons = Instrumen()  # кол-во вагонов
+    list_type_wagons = ['открытый', 'закрытый']
 
     def __init__(self, nickname, train_type, type_wagons, max, count_wagons, average_speed):
         super().__init__(nickname, train_type, average_speed)
