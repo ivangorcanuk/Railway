@@ -20,10 +20,36 @@ from data import WorkingUtils
 from SQLite import SQL
 
 
-class Merger:
+class MergerSQL:
     def __init__(self):
         self.sql = SQL()
-        self.list_city = self.sql.select_cities()  # вытянули список с городами
+        self.dict_city = self.sql.select_cities()  # вытянули словарь с городами
+
+    def create_train(self, nickname, train_type, type_wagons, max, count_wagons, average_speed):  # создаем поезд
+        train = WorkingUtils.registration_train(nickname, train_type, type_wagons, max, count_wagons, average_speed)
+        self.sql.insert_train(train)  # сохранили в базу
+
+    def create_schedule(self, nickname, date_departures, date_arrival,
+                        time_departures, time_arrival, time_travel, train_type):  # создаем расписание
+        schedule = WorkingUtils.registration_schedule(nickname, date_departures, date_arrival,
+                                                      time_departures, time_arrival, time_travel, train_type)
+        self.sql.insert_train(schedule)  # сохранили в базу
+
+    def formul_distance(self, otk, kud):
+        x_1 = self.dict_city[otk][0]
+        x_2 = self.dict_city[otk][1]
+        y_1 = self.dict_city[kud][0]
+        y_2 = self.dict_city[kud][1]
+        return WorkingUtils.distance(x_1, x_2, y_1, y_2)
+
+
+class MergerData:
+    def __init__(self):
+        self.list_num = 0
+
+    @staticmethod  # забираем нужное кол-во цифр
+    def count_num(num):
+        return WorkingUtils.count_num(num)
 # menu1 = input('номер поезда')
 # menu2 = input('название поезда')
 # menu3 = input('тип поезда')
@@ -41,6 +67,7 @@ class Merger:
 #
 # obj = WorkingUtils.registration_train(menu1, menu2, menu3, menu4, menu5_1, menu5_2, menu6)
 # print(obj.nickname)
+
 
 if __name__ == "__main__":
     mainMenu = MainMenu()
