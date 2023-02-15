@@ -1,12 +1,12 @@
 import tkinter as tk
 from tkinter import ttk
 from main import MergerSQL, MergerData
+import datetime
 
-merger = MergerSQL()
-list_type_pas = ['общий', 'плацкарт', 'купе']
-list_type_car = ['открытый', 'закрытый']
+mergerSQL = MergerSQL()
+mergerData = MergerData()
 list_city = list()
-for keys in merger.dict_city.keys():
+for keys in mergerSQL.dict_city.keys():
     list_city.append(keys)
 
 
@@ -97,11 +97,10 @@ class CreateRoute(tk.Toplevel):  # создать маршрут
         self['bg'] = '#33ffe6'
         self.geometry(f'430x380+500+50')
         self.title('Создать маршрут')
-        self.list_train_type = ['пассажирский', 'грузовой']
         self.value_year = tk.StringVar(self, '2023')  # в каком году
 
         MainMenu.label(self, text='Выберите тип поезда:').place(x=10, y=10, width=175, height=20)
-        self.combo1 = ttk.Combobox(self, values=self.list_train_type, font=('Arial', 10))
+        self.combo1 = ttk.Combobox(self, values=mergerData.list_train_type, font=('Arial', 10))
         self.combo1.place(x=190, y=10, width=230, height=20)
 
         MainMenu.label(self, text='Откуда:').place(x=10, y=40, width=65, height=20)
@@ -139,7 +138,7 @@ class CreateRoute(tk.Toplevel):  # создать маршрут
                                       '(общий - 70 мест\n'
                                       ' плацкарт - 54 места\n'
                                       ' купе - 36 мест').place(x=10, y=10, width=200, height=80)
-            self.combo6 = ttk.Combobox(window_train, values=list_type_pas, font=('Arial', 10))
+            self.combo6 = ttk.Combobox(window_train, values=mergerData.list_type_pas, font=('Arial', 10))
             self.combo6.place(x=220, y=40, width=200, height=20)
 
             MainMenu.label(window_train, text='Выберите кол-во вагонов:').place(x=10, y=100, width=200, height=20)
@@ -152,7 +151,7 @@ class CreateRoute(tk.Toplevel):  # создать маршрут
             MainMenu.label(window_train, text='Выберите тип вагонов:\n'
                                               '(открытый\n'
                                               ' закрытый').place(x=10, y=10, width=200, height=80)
-            self.combo6 = ttk.Combobox(window_train, values=list_type_car, font=('Arial', 10))
+            self.combo6 = ttk.Combobox(window_train, values=mergerData.list_type_car, font=('Arial', 10))
             self.combo6.place(x=220, y=40, width=200, height=20)
 
             MainMenu.label(window_train, text='Выберите кол-во вагонов:').place(x=10, y=100, width=200, height=20)
@@ -174,18 +173,30 @@ class CreateRoute(tk.Toplevel):  # создать маршрут
         nickname = self.combo2.get() + ' - ' + self.combo3.get()  # название поезда
         train_type = self.combo1.get()  # тип поезда пассажирский/грузовой
         type_wagons = self.combo6.get()  # тип поезда общий/плацкарт/купе либо вагонов открытый/закрытый
-        max = 12  # максималтная вместимость пассажиров
-        count_wagons = self.combo7.get()  # кол-во вагонов
+        count_wagons = int(self.combo7.get())  # кол-во вагонов
+        max_load = MergerData.max_load(type_wagons, count_wagons)  # максималтная нагрузка
         average_speed = 100
-        date_departures = self.combo4.get() + '-' + self.combo4_1.get() + '-' + self.value_year.get()  # дата отправления
-        time_departures = self.combo5.get() + ':' + self.combo5_1.get()  # время отправления
-        distance = merger.formul_distance(otk, kud)  # по ккординатам откуда/куда, высчитываем расстояние
-        #merger.create_train(nickname, train_type, type_wagons, max, count_wagons, average_speed)  # создали поезд
+        date_sending = self.combo4.get() + '-' + self.combo4_1.get() + '-' + self.value_year.get()  # дата отправления
+        time_sending = datetime.timedelta(hours=int(self.combo5.get()), minutes=int(self.combo5_1.get()))  # время отправления
+        distance = mergerSQL.formul_distance(otk, kud)  # км
+        travel_time = datetime.timedelta(hours=distance // average_speed, minutes=distance % average_speed)  # время в пути
+        time_arrival = time_sending + travel_time
+        # time_sending = str(time_sending)
+        # time_arrival = str(time_arrival)
+        # travel_time = str(travel_time)
+        # time_sending = time_sending[0:4]
+        # time_arrival = time_arrival[0:4]
+        # travel_time = travel_time[0:4]
+
+        mergerSQL.create_train(nickname, train_type, type_wagons, count_wagons, average_speed)  # создали поезд
+        mergerSQL.create_schedule(nickname, date_sending, time_sending, time_arrival, travel_time, train_type)  # создали поезд
+
         print(f'Название поезда - {nickname} \n'
               f'Тип поезда - {train_type} \n'
-              f'Максимальная нагрузка - {max} \n'
-              f'Тип вагонов - {type_wagons} \n'
+              f'Максимальная нагрузка - {max_load} \n'
               f'Кол-во вагонов - {count_wagons} \n'
-              f'Дата отправления - {date_departures} \n'
-              f'Время отправления - {time_departures} \n'
-              f'Расстояние от А до Б - {distance}')
+              f'Дата отправления - {date_sending} \n'
+              f'Время отправления - {time_sending} \n'
+              f'Время прибытия - {time_sending + travel_time} \n'
+              f'Км - {distance} \n'
+              f'Веря в пути - {travel_time}')
