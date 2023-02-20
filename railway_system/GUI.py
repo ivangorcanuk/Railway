@@ -3,33 +3,33 @@ from tkinter import ttk
 from main import MergerSQL, MergerData
 import datetime
 
-mergerSQL = MergerSQL()
-mergerData = MergerData()
-list_city = list()
-for keys in mergerSQL.dict_city.keys():
-    list_city.append(keys)
-
 
 class MainMenu(tk.Tk):  # главное меню
     def __init__(self):
         super().__init__()
+        self.mainLogic = MergerSQL()
+        self.list_city = list()
+        for keys in self.mainLogic.dict_city.keys():
+            self.list_city.append(keys)
         self.geometry(f'430x360+500+50')
-        self.title('Zoo')
+        self.title('Railway')
 
         # self.img = tk.PhotoImage(file='images/zoo.png')
         # tk.Label(self, image=self.img).pack()
 
-        self.button(self, 'Посмотреть маршруты', self.open_window1).place(x=60, y=30, width=300, height=20)
-        self.button(self, 'Создать маршрут', self.open_window2).place(x=60, y=60, width=300, height=20)
-        self.button(self, 'Exit', self.destroy).place(x=60, y=150, width=300, height=20)
+        self.button(self, 'Расписание', self.open_window1).place(x=60, y=30, width=300, height=20)
+        self.button(self, 'Поезда', self.open_window2).place(x=60, y=60, width=300, height=20)
+        self.button(self, 'Зарегестрировать поезд', self.open_window3).place(x=60, y=90, width=300, height=20)
+        self.button(self, 'Зарегестрировать маршрут', self.open_window4).place(x=60, y=120, width=300, height=20)
+        self.button(self, 'Exit', self.open_window5).place(x=60, y=200, width=300, height=20)
 
     @staticmethod
     def button(window, text, command):
         return tk.Button(window, text=text, font=('Arial', 13), command=command)
 
     @staticmethod
-    def label(window, text):
-        return tk.Label(window, text=text, font=('Arial', 13))
+    def label(window, text, color='black'):
+        return tk.Label(window, text=text, font=('Arial', 13), foreground=color)
 
     @staticmethod
     def entry(window, variable):
@@ -44,71 +44,132 @@ class MainMenu(tk.Tk):  # главное меню
         return tk.Text(window, font=('Arial', 13), bg='#a5a29c')
 
     def open_window1(self):
-        viewing_routes = ViewingRoutes(self)
-        viewing_routes.grab_set()
+        viewing_schedule = ViewingSchedule(self)
+        viewing_schedule.grab_set()
 
     def open_window2(self):
-        create_route = CreateRoute(self)
+        train_view = TrainView(self)
+        train_view.grab_set()
+
+    def open_window3(self):
+        viewing_routes = TrainRegistration(self)
+        viewing_routes.grab_set()
+
+    def open_window4(self):
+        create_route = ScheduleRegistration(self)
         create_route.grab_set()
 
+    def open_window5(self):
+        self.destroy()
 
-"""Просмотр маршрутов"""
+
+"""Просмотр расписания"""
 
 
-class ViewingRoutes(tk.Toplevel):  # просмотр маршрутов
+class ViewingSchedule(tk.Toplevel):  # просмотр расписания
     def __init__(self, parent):
         super().__init__(parent)
-        self.title('Просмотр маршрутов')
-        self['bg'] = '#33ffe6'
+        self.list_city = parent.list_city
+        self.title('Просмотр расписания')
         self.geometry(f'430x360+500+50')
         self.value_year = tk.StringVar(self, '2023')  # в каком году
+        self.valueStr = tk.StringVar(self, '1')
 
         MainMenu.label(self, text='Откуда:').place(x=10, y=10, width=65, height=20)
-        self.combo1 = ttk.Combobox(self, values=list_city, font=('Arial', 10))
+        self.combo1 = ttk.Combobox(self, values=self.list_city, font=('Arial', 10))
         self.combo1.place(x=190, y=10, width=230, height=20)
 
         MainMenu.label(self, text='Куда:').place(x=10, y=40, width=50, height=20)
-        self.combo2 = ttk.Combobox(self, values=list_city, font=('Arial', 10))
+        self.combo2 = ttk.Combobox(self, values=self.list_city, font=('Arial', 10))
         self.combo2.place(x=190, y=40, width=230, height=20)
 
         MainMenu.label(self, text='Когда:').place(x=10, y=70, width=60, height=20)
         self.combo1 = ttk.Combobox(self, values=MergerData.count_num(31), font=('Arial', 10))
-        self.combo1.place(x=100, y=70, width=40, height=20)
+        self.combo1.place(x=190, y=70, width=40, height=20)
         self.combo1 = ttk.Combobox(self, values=MergerData.count_num(12), font=('Arial', 10))
-        self.combo1.place(x=140, y=70, width=40, height=20)
-        MainMenu.entry(self, self.value_year).place(x=180, y=70, width=40, height=20)
+        self.combo1.place(x=230, y=70, width=40, height=20)
+        MainMenu.entry(self, self.value_year).place(x=270, y=70, width=40, height=20)
 
-        MainMenu.button(self, 'Искать', self.open_window3).place(x=280, y=70, width=60, height=20)
+        MainMenu.radiobutton(self, 'пассажирский', self.valueStr).place(x=30, y=100, width=130, height=20)
+        MainMenu.radiobutton(self, 'грузовой', self.valueStr).place(x=200, y=100, width=90, height=20)
 
         self.text = MainMenu.text(self)
         self.text.insert('end', f'Выберите текс')
-        self.text.place(x=10, y=100, width=410, height=250)
+        self.text.place(x=10, y=130, width=410, height=190)
 
-    def open_window3(self):
-        pass
+        MainMenu.button(self, 'Назад', self.destroy).place(x=10, y=330, width=60, height=20)
+        MainMenu.button(self, 'Искать', self.open_window1).place(x=360, y=330, width=60, height=20)
+
+    def open_window1(self):
+        print(self.valueStr.get())
 
 
-"""Создать маршрут"""
+"""Просмотр поездов"""
 
 
-class CreateRoute(tk.Toplevel):  # создать маршрут
+class TrainView(tk.Toplevel):  # просмотр поездов
     def __init__(self, parent):
         super().__init__(parent)
+        self.list_city = parent.list_city
+        self.title('Просмотр поездов')
+        self.geometry(f'430x360+500+50')
+        self.train_name = tk.StringVar()
+        self.valueStr = tk.StringVar(self, '1')
+
+        MainMenu.label(self, 'Укажите имя поезда:').place(x=10, y=10, width=180, height=20)
+        MainMenu.entry(self, self.train_name).place(x=200, y=10, width=140, height=20)
+        MainMenu.button(self, 'Удалить', self.destroy).place(x=350, y=10, width=70, height=20)
+        MainMenu.label(self, 'Будьте внимательны, вместе с поездом так же \n удалится расписание по которому он ходил!', 'red').place(x=10, y=40, width=410, height=40)
+
+        MainMenu.radiobutton(self, 'пассажирский', self.valueStr).place(x=50, y=100, width=130, height=20)
+        MainMenu.radiobutton(self, 'грузовой', self.valueStr).place(x=250, y=100, width=90, height=20)
+
+        self.text = MainMenu.text(self)
+        self.text.insert('end', f'Выберите текс')
+        self.text.place(x=10, y=130, width=410, height=190)
+
+        MainMenu.button(self, 'Назад', self.destroy).place(x=10, y=330, width=60, height=20)
+        MainMenu.button(self, 'Искать', self.open_window1).place(x=360, y=330, width=60, height=20)
+
+    def open_window1(self):
+        print(self.train_name.get(), self.valueStr.get())
+
+
+"""Регистрация поездов"""
+
+
+class TrainRegistration(tk.Toplevel):  # регистрация поездов
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.list_city = parent.list_city
+        self.title('Регистрация поездов')
+        self['bg'] = '#33ffe6'
+        self.geometry(f'430x360+500+50')
+
+
+"""Регистрация расписания"""
+
+
+class ScheduleRegistration(tk.Toplevel):  # регистрация расписания
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.mainLogic = parent.mainLogic  # сохранили объект класса MergerSQL
+        self.list_city = parent.list_city  # сохранили список с городами
         self['bg'] = '#33ffe6'
         self.geometry(f'430x380+500+50')
-        self.title('Создать маршрут')
+        self.title('Регистрация расписания')
         self.value_year = tk.StringVar(self, '2023')  # в каком году
 
         MainMenu.label(self, text='Выберите тип поезда:').place(x=10, y=10, width=175, height=20)
-        self.combo1 = ttk.Combobox(self, values=mergerData.list_train_type, font=('Arial', 10))
+        self.combo1 = ttk.Combobox(self, values=MergerData.list_train_type, font=('Arial', 10))
         self.combo1.place(x=190, y=10, width=230, height=20)
 
         MainMenu.label(self, text='Откуда:').place(x=10, y=40, width=65, height=20)
-        self.combo2 = ttk.Combobox(self, values=list_city, font=('Arial', 10))
+        self.combo2 = ttk.Combobox(self, values=self.list_city, font=('Arial', 10))
         self.combo2.place(x=190, y=40, width=230, height=20)
 
         MainMenu.label(self, text='Куда:').place(x=10, y=70, width=50, height=20)
-        self.combo3 = ttk.Combobox(self, values=list_city, font=('Arial', 10))
+        self.combo3 = ttk.Combobox(self, values=self.list_city, font=('Arial', 10))
         self.combo3.place(x=190, y=70, width=230, height=20)
 
         MainMenu.label(self, text='Когда:').place(x=10, y=100, width=60, height=20)
@@ -138,7 +199,7 @@ class CreateRoute(tk.Toplevel):  # создать маршрут
                                       '(общий - 70 мест\n'
                                       ' плацкарт - 54 места\n'
                                       ' купе - 36 мест').place(x=10, y=10, width=200, height=80)
-            self.combo6 = ttk.Combobox(window_train, values=mergerData.list_type_pas, font=('Arial', 10))
+            self.combo6 = ttk.Combobox(window_train, values=MergerData.list_type_pas, font=('Arial', 10))
             self.combo6.place(x=220, y=40, width=200, height=20)
 
             MainMenu.label(window_train, text='Выберите кол-во вагонов:').place(x=10, y=100, width=200, height=20)
@@ -151,7 +212,7 @@ class CreateRoute(tk.Toplevel):  # создать маршрут
             MainMenu.label(window_train, text='Выберите тип вагонов:\n'
                                               '(открытый\n'
                                               ' закрытый').place(x=10, y=10, width=200, height=80)
-            self.combo6 = ttk.Combobox(window_train, values=mergerData.list_type_car, font=('Arial', 10))
+            self.combo6 = ttk.Combobox(window_train, values=MergerData.list_type_car, font=('Arial', 10))
             self.combo6.place(x=220, y=40, width=200, height=20)
 
             MainMenu.label(window_train, text='Выберите кол-во вагонов:').place(x=10, y=100, width=200, height=20)
@@ -168,8 +229,6 @@ class CreateRoute(tk.Toplevel):  # создать маршрут
         return window_train
 
     def save(self):
-        otk = self.combo2.get()
-        kud = self.combo3.get()
         nickname = self.combo2.get() + ' - ' + self.combo3.get()  # название поезда
         train_type = self.combo1.get()  # тип поезда пассажирский/грузовой
         type_wagons = self.combo6.get()  # тип поезда общий/плацкарт/купе либо вагонов открытый/закрытый
@@ -178,18 +237,12 @@ class CreateRoute(tk.Toplevel):  # создать маршрут
         average_speed = 100
         date_sending = self.combo4.get() + '-' + self.combo4_1.get() + '-' + self.value_year.get()  # дата отправления
         time_sending = datetime.timedelta(hours=int(self.combo5.get()), minutes=int(self.combo5_1.get()))  # время отправления
-        distance = mergerSQL.formul_distance(otk, kud)  # км
+        distance = self.mainLogic.formul_distance(self.combo2.get(), self.combo3.get())  # нашли расстояние
         travel_time = datetime.timedelta(hours=distance // average_speed, minutes=distance % average_speed)  # время в пути
         time_arrival = time_sending + travel_time
-        # time_sending = str(time_sending)
-        # time_arrival = str(time_arrival)
-        # travel_time = str(travel_time)
-        # time_sending = time_sending[0:4]
-        # time_arrival = time_arrival[0:4]
-        # travel_time = travel_time[0:4]
 
-        mergerSQL.create_train(nickname, train_type, type_wagons, count_wagons, average_speed)  # создали поезд
-        mergerSQL.create_schedule(nickname, date_sending, time_sending, time_arrival, travel_time, train_type)  # создали поезд
+        self.mainLogic.create_train(nickname, train_type, type_wagons, count_wagons, average_speed)  # создали поезд
+        self.mainLogic.create_schedule(date_sending, time_sending, time_arrival, travel_time)  # создали поезд
 
         print(f'Название поезда - {nickname} \n'
               f'Тип поезда - {train_type} \n'
