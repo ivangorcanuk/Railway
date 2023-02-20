@@ -1,3 +1,6 @@
+from math import radians, cos, sin, asin, sqrt
+
+
 class Instrumen:
     def __set_name__(self, owner, name):
         self.name = '_' + name
@@ -12,7 +15,7 @@ class Instrumen:
 """Базовый класс с общей информацией о всех поездах"""
 
 
-class MainInf:
+class TrainBase:
     nickname = Instrumen()  # название поезда
     train_type = Instrumen()  # тип поезда пассажирский(True)/грузовой(False)
     average_speed = Instrumen()  # средняя скорость
@@ -30,7 +33,7 @@ class MainInf:
 """Классы делящие поезда на пассажирские/грузовые"""
 
 
-class Passenger(MainInf):  # пассажирский
+class Passenger(TrainBase):  # пассажирский
     max_load = Instrumen()  # максималтная вместимость пассажиров
     type_wagons = Instrumen()  # тип поезда общий/плацкарт/купе
     count_wagons = Instrumen()  # кол-во вагонов
@@ -44,7 +47,7 @@ class Passenger(MainInf):  # пассажирский
         self._count_wagons = count_wagons
 
 
-class Cargo(MainInf):  # грузовой
+class Cargo(TrainBase):  # грузовой
     max_load = Instrumen()  # максималтно перевозимый вес
     type_wagons = Instrumen()  # тип вагонов открытый/закрытый
     count_wagons = Instrumen()  # кол-во вагонов
@@ -58,15 +61,59 @@ class Cargo(MainInf):  # грузовой
         self._type_wagons = type_wagons
 
 
-class Schedule(MainInf):  # расписание
+class Schedule:  # расписание
     date_sending = Instrumen()  # дата отправления
     time_sending = Instrumen()  # время отправления
     time_arrival = Instrumen()  # время прибытия
     time_travel = Instrumen()  # время в пути
 
-    def __init__(self, nickname, date_sending, time_sending, time_arrival, time_travel, train_type):
-        super().__init__(nickname, train_type)
+    def __init__(self, date_sending, time_sending, time_arrival, time_travel):
         self._date_sending = date_sending
         self._time_sending = time_sending
         self._time_arrival = time_arrival
         self._time_travel = time_travel
+
+
+class WorkingUtils:
+    @staticmethod  # регистрация поезда
+    def registration_train(nickname, train_type, type_wagons, max, count_wagons, average_speed):
+        if train_type == TrainBase.list_train_type[0]:  # если поезд пассажирский
+            return Passenger(nickname, train_type, type_wagons, max, count_wagons, average_speed)
+        else:
+            return Cargo(nickname, train_type, type_wagons, max, count_wagons, average_speed)
+
+    @staticmethod  # создание расписания
+    def registration_schedule(date_sending, time_sending, time_arrival, time_travel):
+        return Schedule(date_sending, time_sending, time_arrival, time_travel)
+
+    @staticmethod  # возвращает список с нужным кол-вом чисел
+    def count_num(num):
+        list_numbers = list()
+        i = 0
+        while i < num:
+            i += 1
+            list_numbers.append(i)
+        return list_numbers
+
+    @staticmethod
+    def distance(lat1, lon1, lat2, lon2):
+        lon1, lat1, lon2, lat2 = map(radians, (lon1, lat1, lon2, lat2))  # преобразовать десятичные градусы в радианы
+        dlon = lon2 - lon1
+        dlat = lat2 - lat1
+        a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2  # формула гаверсинуса
+        c = 2 * asin(sqrt(a))
+        km = 6367 * c
+        return round(km)  # округлили
+
+    @staticmethod
+    def max_load(typ_wagon, count_wagons):
+        if typ_wagon == Passenger.list_type_wagons[0]:  # если тип вагонов общий
+            return count_wagons * Passenger.list_count_places[0]
+        elif typ_wagon == Passenger.list_type_wagons[1]:  # если тип вагонов плацкар
+            return count_wagons * Passenger.list_count_places[1]
+        elif typ_wagon == Passenger.list_type_wagons[2]:  # если тип вагонов купе
+            return count_wagons * Passenger.list_count_places[2]
+        elif typ_wagon == Cargo.list_type_wagons[0]:  # если тип вагонов открытый
+            return count_wagons * Cargo.list_max_load[0]
+        elif typ_wagon == Cargo.list_type_wagons[1]:  # если тип вагонов закрытый
+            return count_wagons * Cargo.list_max_load[0]
