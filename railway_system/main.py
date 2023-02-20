@@ -16,26 +16,27 @@
 # Позволять рассчитать время пути между двумя выбранными станциями
 
 from GUI import *
-from data import WorkingUtils
-from SQLite import SQL
-from train_tupe import Passenger, Cargo, MainInf
+from SQLite import DBhandler
+from train_tupe import Passenger, Cargo, TrainBase, WorkingUtils
 
 
 class MergerSQL:
     def __init__(self):
-        self.sql = SQL()
+        self.sql = DBhandler()
         self.dict_city = self.sql.select_cities()  # вытянули словарь с городами
+        self.train = None
 
     def create_train(self, nickname, train_type, type_wagons, count_wagons, average_speed):  # создаем поезд
         max_load = WorkingUtils.max_load(type_wagons, count_wagons)  # вернули максимальную нагрузку
-        train = WorkingUtils.registration_train(nickname, train_type, type_wagons, max_load, count_wagons, average_speed)
-        print(train.nickname, train.train_type, train.type_wagons, train.max_load, train.count_wagons, train.average_speed)
-        self.sql.insert_train(train)  # сохранили в базу
+        self.train = WorkingUtils.registration_train(nickname, train_type, type_wagons, max_load, count_wagons, average_speed)
+        print(self.train.nickname, self.train.train_type, self.train.type_wagons,
+              self.train.max_load, self.train.count_wagons, self.train.average_speed)
+        self.sql.insert_train(self.train)  # сохранили в базу
 
-    def create_schedule(self, nickname, date_sending, time_sending, time_arrival, time_travel, train_type):  # создаем расписание
-        schedule = WorkingUtils.registration_schedule(nickname, date_sending, time_sending, time_arrival, time_travel, train_type)
-        print(schedule.nickname, schedule.date_sending, schedule.time_sending, schedule.time_arrival, schedule.time_travel, schedule.train_type)
-        self.sql.insert_schedule(schedule)  # сохранили в базу
+    def create_schedule(self, date_sending, time_sending, time_arrival, time_travel):  # создаем расписание
+        schedule = WorkingUtils.registration_schedule(date_sending, time_sending, time_arrival, time_travel)
+        print(schedule.date_sending, schedule.time_sending, schedule.time_arrival, schedule.time_travel)
+        self.sql.insert_schedule(schedule, self.train)  # сохранили в базу
 
     def formul_distance(self, otk, kud):
         x_1 = self.dict_city[otk][0]
@@ -46,10 +47,9 @@ class MergerSQL:
 
 
 class MergerData:
-    def __init__(self):
-        self.list_type_pas = Passenger.list_type_wagons
-        self.list_type_car = Cargo.list_type_wagons
-        self.list_train_type = MainInf.list_train_type
+    list_type_pas = Passenger.list_type_wagons
+    list_type_car = Cargo.list_type_wagons
+    list_train_type = TrainBase.list_train_type
 
     @staticmethod  # забираем нужное кол-во цифр
     def count_num(num):
@@ -58,23 +58,6 @@ class MergerData:
     @staticmethod
     def max_load(type_wagons, count_wagons):
         return WorkingUtils.max_load(type_wagons, count_wagons)
-# menu1 = input('номер поезда')
-# menu2 = input('название поезда')
-# menu3 = input('тип поезда')
-# menu4 = str()
-# menu5_1 = str()
-# menu5_2 = str()
-# menu6 = str()
-# if menu3 == 'Пассажирский':
-#     menu4 = input('тип пассажирского поезда')
-#     menu5_1 = input('кол-во пассажиров')
-#     menu6 = input('кол-во вагонов')
-# elif menu3 == 'Грузовой':
-#     menu5_2 = input('максимально перевозимый вес')
-#     menu6 = input('кол-во вагонов')
-#
-# obj = WorkingUtils.registration_train(menu1, menu2, menu3, menu4, menu5_1, menu5_2, menu6)
-# print(obj.nickname)
 
 
 if __name__ == "__main__":
