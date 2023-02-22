@@ -62,14 +62,20 @@ class Cargo(TrainBase):  # грузовой
 
 
 class Schedule:  # расписание
+    otkuda = Instrumen()  # откуда едет поезд
     date_sending = Instrumen()  # дата отправления
     time_sending = Instrumen()  # время отправления
+    kuda = Instrumen()  # куда едет поезд
+    date_arrival = Instrumen()  # дата прибытия
     time_arrival = Instrumen()  # время прибытия
     time_travel = Instrumen()  # время в пути
 
-    def __init__(self, date_sending, time_sending, time_arrival, time_travel):
+    def __init__(self, otkuda, date_sending, time_sending, kuda, date_arrival, time_arrival, time_travel):
+        self._otkuda = otkuda
         self._date_sending = date_sending
         self._time_sending = time_sending
+        self._kuda = kuda
+        self._date_arrival = date_arrival
         self._time_arrival = time_arrival
         self._time_travel = time_travel
 
@@ -83,17 +89,21 @@ class WorkingUtils:
             return Cargo(nickname, train_type, type_wagons, max, count_wagons, average_speed)
 
     @staticmethod  # создание расписания
-    def registration_schedule(date_sending, time_sending, time_arrival, time_travel):
-        return Schedule(date_sending, time_sending, time_arrival, time_travel)
+    def registration_schedule(otkuda, date_sending, time_sending, kuda, date_arrival, time_arrival, time_travel):
+        return Schedule(otkuda, date_sending, time_sending, kuda, date_arrival, time_arrival, time_travel)
 
     @staticmethod  # возвращает список с нужным кол-вом чисел
-    def count_num(num):
+    def count_num(min_number, max_number):
         list_numbers = list()
         i = 0
-        while i < num:
+        while i < max_number:
             i += 1
             list_numbers.append(i)
-        return list_numbers
+        if min_number:
+            return list_numbers
+        else:
+            list_numbers.insert(0, 0)
+            return list_numbers  # добавили 0 в начале списка
 
     @staticmethod
     def distance(lat1, lon1, lat2, lon2):
