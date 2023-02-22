@@ -18,15 +18,15 @@ class DBhandler:
 
     def insert_train(self, train):
         self.cursor.execute('''INSERT INTO train
-                            (nickname, train_type, type_wagon, max_capacity, count_wagons, average_speed)
-                            VALUES (?,?,?,?,?,?)''',
+                            (id, nickname, train_type, wagon_type, max_capacity, wagons_count, average_speed)
+                            VALUES (?,?,?,?,?,?,?)''',
                             (train.nickname, train.train_type, train.type_wagons, train.max_load, train.count_wagons, train.average_speed))
         self.conn.commit()
 
     def insert_schedule(self, schedule, train):
         self.cursor.execute('''INSERT INTO schedule
-                            (nickname, date_sending, time_sending, time_arrival, time_travel, train_type)
-                            VALUES (?,?,?,?,?,?)''',
+                            (id, id_pers, otkuda, date_sending, time_sending, kuda, date_arrival, time_arrival, time_travel)
+                            VALUES (?,?,?,?,?,?,?,?,?)''',
                             (train.nickname, schedule.date_sending, str(schedule.time_sending),
                              str(schedule.time_arrival), str(schedule.time_travel), train.train_type))
         self.conn.commit()
