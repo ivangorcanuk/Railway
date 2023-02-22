@@ -31,12 +31,13 @@ class MergerSQL:
         self.train = WorkingUtils.registration_train(nickname, train_type, type_wagons, max_load, count_wagons, average_speed)
         print(self.train.nickname, self.train.train_type, self.train.type_wagons,
               self.train.max_load, self.train.count_wagons, self.train.average_speed)
-        self.sql.insert_train(self.train)  # сохранили в базу
+        #self.sql.insert_train(self.train)  # сохранили в базу
 
-    def create_schedule(self, date_sending, time_sending, time_arrival, time_travel):  # создаем расписание
-        schedule = WorkingUtils.registration_schedule(date_sending, time_sending, time_arrival, time_travel)
-        print(schedule.date_sending, schedule.time_sending, schedule.time_arrival, schedule.time_travel)
-        self.sql.insert_schedule(schedule, self.train)  # сохранили в базу
+    def create_schedule(self, otkuda, date_sending, time_sending, kuda, date_arrival, time_arrival, time_travel):  # создаем расписание
+        schedule = WorkingUtils.registration_schedule(otkuda, date_sending, time_sending, kuda, date_arrival, time_arrival, time_travel)
+        print(schedule.otkuda, schedule.date_sending, schedule.time_sending, schedule.kuda,
+              schedule.date_arrival, schedule.time_arrival, schedule.time_travel)
+        #self.sql.insert_schedule(schedule, self.train)  # сохранили в базу
 
     def formul_distance(self, otk, kud):
         x_1 = self.dict_city[otk][0]
@@ -52,8 +53,8 @@ class MergerData:
     list_train_type = TrainBase.list_train_type
 
     @staticmethod  # забираем нужное кол-во цифр
-    def count_num(num):
-        return WorkingUtils.count_num(num)
+    def count_num(min_number, max_number):
+        return WorkingUtils.count_num(min_number, max_number)
 
     @staticmethod
     def max_load(type_wagons, count_wagons):
