@@ -127,3 +127,11 @@ class WorkingUtils:
             return count_wagons * Cargo.list_max_load[0]
         elif typ_wagon == Cargo.list_type_wagons[1]:  # если тип вагонов закрытый
             return count_wagons * Cargo.list_max_load[0]
+
+    @staticmethod
+    def id_installation(dict_train):
+        i = 0
+        while i <= len(dict_train) + 1:
+            i += 1
+            if i not in dict_train:
+                return i
