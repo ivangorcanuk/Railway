@@ -15,6 +15,14 @@ class DBhandler:
             dict_city[city[0]] = city[1], city[2]
         return dict_city
 
+    def select_id_train(self):  # выписали все id поездов
+        self.cursor.execute('''SELECT id FROM train''')
+        list_tuple = self.cursor.fetchall()
+        list_id_train = list()
+        for trait in list_tuple:
+            list_id_train.append(trait[0])
+        return list_id_train
+
     def select_train(self):  # выписали все названия поездов с их характеристиками
         dict_train = dict()
         self.cursor.execute('''SELECT id, nickname, train_type, wagon_type, max_capacity, wagons_count, average_speed FROM train''')

@@ -27,14 +27,16 @@ class MergerSQL:
         self.dict_train = self.sql.select_train()  # вытянули словарь с поездами
         self.dict_schedule = self.sql.select_schedule()  # вытянули словарь с маршрутами
         self.train = None
+        self.list_id_train = self.sql.select_id_train()
 
     def create_train(self, nickname, train_type, type_wagons, count_wagons, average_speed):  # создаем поезд
         max_load = WorkingUtils.max_load(type_wagons, count_wagons)  # вернули максимальную нагрузку
         self.train = WorkingUtils.registration_train(nickname, train_type, type_wagons, max_load, count_wagons, average_speed)
-        id = WorkingUtils.id_installation(self.dict_train)
+        list_id_train = self.sql.select_id_train()
+        id = WorkingUtils.id_installation(list_id_train)
         print(id, self.train.nickname, self.train.train_type, self.train.type_wagons,
               self.train.max_load, self.train.count_wagons, self.train.average_speed)
-        #self.sql.insert_train(id, self.train)  # сохранили в базу
+        self.sql.insert_train(id, self.train)  # сохранили в базу
 
     def create_schedule(self, otkuda, date_sending, time_sending, kuda, date_arrival, time_arrival, time_travel):  # создаем расписание
         schedule = WorkingUtils.registration_schedule(otkuda, date_sending, time_sending, kuda, date_arrival, time_arrival, time_travel)

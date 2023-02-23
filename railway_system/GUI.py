@@ -185,7 +185,7 @@ class TrainView(tk.Toplevel):  # просмотр поездов
 
         MainMenu.label(self, 'Укажите имя поезда:').place(x=10, y=10, width=180, height=20)
         MainMenu.entry(self, self.train_name).place(x=200, y=10, width=140, height=20)
-        MainMenu.button(self, 'Удалить', self.destroy).place(x=350, y=10, width=70, height=20)
+        MainMenu.button(self, 'Удалить', self.delete).place(x=350, y=10, width=70, height=20)
         MainMenu.label(self, 'Будьте внимательны, вместе с поездом так же \n удалится расписание по которому он ходил!', 'red').place(x=10, y=40, width=410, height=40)
 
         MainMenu.radiobutton(self, 'пассажирский', self.valueStr).place(x=50, y=90, width=130, height=20)
@@ -201,6 +201,14 @@ class TrainView(tk.Toplevel):  # просмотр поездов
 
     def search(self):
         print(self.train_name.get(), self.valueStr.get())
+        self.text.delete('1.0', 'end')  # удалили предыдущий текст в текстовом окне
+        dict_train = self.parent.dict_train
+        for i in dict_train:  # топ 3 самых легких существа зоопарка
+            stroka = dict_train[i][0] + ' - ' + dict_train[i][1] + ' - ' + dict_train[i][2] + ' - ' + str(dict_train[i][3]) + ' - ' + str(dict_train[i][4]) + ' - ' + str(dict_train[i][5])
+            self.text.insert('end', f'{stroka}\n')  # выводим строку
+
+    def delete(self):
+        print(self.train_name.get())
 
     def train_create(self):
         if self.valueStr.get() == MergerData.list_train_type[0]:
@@ -227,6 +235,8 @@ class TrainView(tk.Toplevel):  # просмотр поездов
     def window(self, count_wag):  # создали окно для регистрации поезда
         window_train = ViewingSchedule.window()
         window_train.title(f'Создать {MergerData.list_train_type[0]} поезд')
+        self.train_name = tk.StringVar()
+        self.spead = tk.StringVar()
 
         MainMenu.label(window_train, text='Укажите название поезда:').place(x=10, y=10, width=200, height=20)
         MainMenu.entry(window_train, self.train_name).place(x=220, y=10, width=200, height=20)
@@ -252,6 +262,7 @@ class TrainView(tk.Toplevel):  # просмотр поездов
                   f'Макс нагрузка - {MergerData.max_load(str(self.wagon_typ.get()), int(self.wagon_count.get()))} \n'
                   f'Скорость - {self.spead.get()}')
             self.window_train.destroy()
+            self.destroy()
 
 
 """Задачи"""

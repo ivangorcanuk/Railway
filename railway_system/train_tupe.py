@@ -129,9 +129,9 @@ class WorkingUtils:
             return count_wagons * Cargo.list_max_load[0]
 
     @staticmethod
-    def id_installation(dict_train):
+    def id_installation(list_id_train):
         i = 0
-        while i <= len(dict_train) + 1:
+        while i <= len(list_id_train) + 1:
             i += 1
-            if i not in dict_train:
+            if i not in list_id_train:
                 return i
