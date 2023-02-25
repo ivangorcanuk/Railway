@@ -146,7 +146,11 @@ class ViewingSchedule(tk.Toplevel):  # просмотр расписания
             MainMenu.entry(self.window_train_choose, self.train).place(x=145, y=95, width=140, height=20)
 
             text = MainMenu.text(self.window_train_choose)
-            text.insert('end', f'Тут должны быть все поезда')
+            dict_train = self.parent.mainLogic.dict_train
+            for i in dict_train:  # проходим циклом по словарю с поездами
+                stroka = dict_train[i][0] + ' - ' + dict_train[i][1] + ' - ' + dict_train[i][2] + ' - ' + \
+                         str(dict_train[i][3]) + ' - ' + str(dict_train[i][4]) + ' - ' + str(dict_train[i][5])
+                text.insert('end', f'{stroka}\n')  # выводим строку
             text.place(x=10, y=130, width=410, height=190)
 
             MainMenu.button(self.window_train_choose, 'Назад', self.window_train_choose.destroy).place(x=10, y=330, width=90, height=20)
@@ -154,14 +158,10 @@ class ViewingSchedule(tk.Toplevel):  # просмотр расписания
 
     def save(self):
         if self.train.get():  # добавить, чтобы проверка осуществлялась согласно списку существующих поездов
-            date_sending = self.combo3.get() + '-' + self.combo3_1.get() + '-' + self.value_year.get()  # дата отправления
-            time_sending = datetime.timedelta(hours=int(self.combo4.get()), minutes=int(self.combo4_1.get()))  # время отправления
+            data_time = datetime.datetime(int(self.value_year.get()), int(self.combo3_1.get()), int(self.combo3.get()), int(self.combo4.get()), int(self.combo4_1.get()))
+
             # travel_time = datetime.timedelta(hours=distance // average_speed, minutes=distance % average_speed)  # время в пути
-            # self.parent.create_schedule(self.combo1.get(), date_sending, time_sending, self.combo2.get(), 1, )  # создали маршрут
-            print(f'Откуда - {self.combo1.get()} \n'
-                  f'Куда - {self.combo2.get()} \n'
-                  f'Дата отправления - {date_sending} \n'
-                  f'Время отправления - {time_sending}')
+            self.parent.mainLogic.create_schedule(self.combo1.get(), self.combo2.get(), data_time, self.train.get())  # создали маршрут
             self.window_train_choose.destroy()
 
 

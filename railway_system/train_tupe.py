@@ -106,7 +106,11 @@ class WorkingUtils:
             return list_numbers  # добавили 0 в начале списка
 
     @staticmethod
-    def distance(lat1, lon1, lat2, lon2):
+    def distance(dict_city, otk, kud):
+        lat1 = dict_city[otk][0]
+        lon1 = dict_city[otk][1]
+        lat2 = dict_city[kud][0]
+        lon2 = dict_city[kud][1]
         lon1, lat1, lon2, lat2 = map(radians, (lon1, lat1, lon2, lat2))  # преобразовать десятичные градусы в радианы
         dlon = lon2 - lon1
         dlat = lat2 - lat1

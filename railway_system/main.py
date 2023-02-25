@@ -15,6 +15,11 @@
 # Редактивровать расписание для станций
 # Позволять рассчитать время пути между двумя выбранными станциями
 
+# Разобраться с временными функциями
+# При регистрации нового маршрута для получения скорости и id связать расписание с поездами
+# При регистрации нового расписания выводить поезда, которые без маршрутов
+# Осуществить удаление поездов (маршрут без поезда существовать не может, таким образом удалять поезда нужно вместе с маршрутом)
+
 from GUI import *
 from SQLite import DBhandler
 from train_tupe import Passenger, Cargo, TrainBase, WorkingUtils
@@ -38,18 +43,30 @@ class MergerSQL:
               self.train.max_load, self.train.count_wagons, self.train.average_speed)
         self.sql.insert_train(id, self.train)  # сохранили в базу
 
-    def create_schedule(self, otkuda, date_sending, time_sending, kuda, date_arrival, time_arrival, time_travel):  # создаем расписание
-        schedule = WorkingUtils.registration_schedule(otkuda, date_sending, time_sending, kuda, date_arrival, time_arrival, time_travel)
-        print(schedule.otkuda, schedule.date_sending, schedule.time_sending, schedule.kuda,
-              schedule.date_arrival, schedule.time_arrival, schedule.time_travel)
+    def create_schedule(self, otkuda, kuda, date_time, train_name):  # создаем расписание
+        distance = WorkingUtils.distance(self.dict_city, otkuda, kuda)
+        id_train = int()
+        for key, value in self.dict_train.items():
+            if value[0] == str(train_name):
+                id_train = key
+        speed = self.dict_train[id_train][5]
+        # schedule = WorkingUtils.registration_schedule(otkuda, date_sending, time_sending, kuda, date_arrival, time_arrival, time_travel)
+        # print(schedule.otkuda, schedule.date_sending, schedule.time_sending, schedule.kuda,
+        #       schedule.date_arrival, schedule.time_arrival, schedule.time_travel)
+        print(f'Откуда - {otkuda} \n'
+              f'Куда - {kuda} \n'
+              f'Дата отправления - {date_time.date()} \n'
+              f'Время отправления - {date_time.time()} \n'
+              f'Дистанция - {distance} \n'
+              f'Скорость - {speed}')
         #self.sql.insert_schedule(schedule, self.train)  # сохранили в базу
 
-    def formul_distance(self, otk, kud):
-        x_1 = self.dict_city[otk][0]
-        x_2 = self.dict_city[otk][1]
-        y_1 = self.dict_city[kud][0]
-        y_2 = self.dict_city[kud][1]
-        return WorkingUtils.distance(x_1, x_2, y_1, y_2)
+    # def formul_distance(self, otk, kud):
+    #     x_1 = self.dict_city[otk][0]
+    #     x_2 = self.dict_city[otk][1]
+    #     y_1 = self.dict_city[kud][0]
+    #     y_2 = self.dict_city[kud][1]
+    #     return WorkingUtils.distance(x_1, x_2, y_1, y_2)
 
 
 class MergerData:
