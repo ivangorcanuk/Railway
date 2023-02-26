@@ -75,7 +75,6 @@ class ViewingSchedule(tk.Toplevel):  # просмотр расписания
         self.title('Просмотр расписания')
         self.geometry(f'430x360+500+50')
         self.value_year = tk.StringVar(self, '2023')  # в каком году
-        self.valueStr = tk.StringVar(self, '1')
         self.combo4 = None  # время отправки (часы)
         self.combo4_1 = None  # время отправки (минуты)
         self.window_train_choose = None  # окно для выбора поездов при регистрации нового маршрута
@@ -96,24 +95,36 @@ class ViewingSchedule(tk.Toplevel):  # просмотр расписания
         self.combo3_1.place(x=230, y=70, width=40, height=20)
         MainMenu.entry(self, self.value_year).place(x=270, y=70, width=40, height=20)
 
-        MainMenu.radiobutton(self, 'пассажирский', self.valueStr).place(x=50, y=100, width=130, height=20)
-        MainMenu.radiobutton(self, 'грузовой', self.valueStr).place(x=250, y=100, width=90, height=20)
-
         self.text = MainMenu.text(self)
-        for i in self.dict_schedule:  # проходим циклом по словарю с маршрутами
-            otkuda = self.dict_schedule[i][1] + ' - ' + self.dict_schedule[i][2] + ' - ' + self.dict_schedule[i][3]
-            kuda = self.dict_schedule[i][4] + ' - ' + self.dict_schedule[i][5] + ' - ' + \
-                   self.dict_schedule[i][6]
-            time_travel = self.dict_schedule[i][7]
-            self.text.insert('end', f' {otkuda} \n {kuda} \n Время в пути - {time_travel} \n')  # выводим строку
-        self.text.place(x=10, y=130, width=410, height=190)
+        self.update()
+        self.text.place(x=10, y=100, width=410, height=220)
 
         MainMenu.button(self, 'Назад', self.destroy).place(x=10, y=330, width=80, height=20)
         MainMenu.button(self, 'Добавить', self.examination).place(x=250, y=330, width=80, height=20)
         MainMenu.button(self, 'Искать', self.search).place(x=340, y=330, width=80, height=20)
+        MainMenu.button(self, 'Обновить', self.update).place(x=160, y=330, width=80, height=20)
+
+    def update(self):  # обновить
+        self.text.delete('1.0', 'end')  # удалили предыдущий текст в текстовом окне
+        for i in self.dict_schedule:  # проходим циклом по словарю с маршрутами
+            otkuda = self.dict_schedule[i][1] + ' - ' + self.dict_schedule[i][2] + ' - ' + self.dict_schedule[i][3]
+            kuda = self.dict_schedule[i][4] + ' - ' + self.dict_schedule[i][5] + ' - ' + \
+                   self.dict_schedule[i][6]
+            self.text.insert('end',
+                             f' {otkuda} \n {kuda} \n Время в пути - {self.dict_schedule[i][7]} \n')  # выводим строку
+            self.text.insert('end', '\n')
 
     def search(self):
-        print(self.valueStr.get())
+        if self.combo1.get() and self.combo2.get() and self.combo3.get() and self.combo3_1.get():
+            data = datetime.date(int(self.value_year.get()), int(self.combo3_1.get()), int(self.combo3.get()))
+            for key in self.dict_schedule.keys():
+                if self.dict_schedule[key][1] == self.combo1.get() and self.dict_schedule[key][4] == self.combo2.get() and self.dict_schedule[key][2] == str(data):
+                    otkuda = self.dict_schedule[key][1] + ' - ' + self.dict_schedule[key][2] + ' - ' + \
+                             self.dict_schedule[key][3]
+                    kuda = self.dict_schedule[key][4] + ' - ' + self.dict_schedule[key][5] + ' - ' + \
+                           self.dict_schedule[key][6]
+                    self.text.delete('1.0', 'end')  # удалили предыдущий текст в текстовом окне
+                    self.text.insert('end', f' {otkuda} \n {kuda} \n Время в пути - {self.dict_schedule[key][7]} \n')
 
     @staticmethod
     def window():
@@ -211,18 +222,17 @@ class TrainView(tk.Toplevel):  # просмотр поездов
         MainMenu.radiobutton(self, 'грузовой', self.valueStr).place(x=250, y=90, width=90, height=20)
 
         self.text = MainMenu.text(self)
-        self.text.insert('end', f'Выберите текс')
+        self.update()
         self.text.place(x=10, y=120, width=410, height=200)
 
-        MainMenu.button(self, 'Назад', self.destroy).place(x=10, y=330, width=60, height=20)
-        MainMenu.button(self, 'Искать', self.search).place(x=360, y=330, width=60, height=20)
-        MainMenu.button(self, 'Создать', self.train_create).place(x=280, y=330, width=70, height=20)
+        MainMenu.button(self, 'Назад', self.destroy).place(x=10, y=330, width=80, height=20)
+        MainMenu.button(self, 'Обновить', self.update).place(x=340, y=330, width=80, height=20)
+        MainMenu.button(self, 'Создать', self.train_create).place(x=250, y=330, width=80, height=20)
 
-    def search(self):
-        print(self.train_name.get(), self.valueStr.get())
+    def update(self):
         self.text.delete('1.0', 'end')  # удалили предыдущий текст в текстовом окне
         dict_train = self.parent.dict_train
-        for i in dict_train:  # топ 3 самых легких существа зоопарка
+        for i in dict_train:
             stroka = dict_train[i][0] + ' - ' + dict_train[i][1] + ' - ' + dict_train[i][2] + ' - ' + str(dict_train[i][3]) + ' - ' + str(dict_train[i][4]) + ' - ' + str(dict_train[i][5])
             self.text.insert('end', f'{stroka}\n')  # выводим строку
 
