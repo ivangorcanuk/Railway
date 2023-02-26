@@ -15,14 +15,6 @@ class DBhandler:
             dict_city[city[0]] = city[1], city[2]
         return dict_city
 
-    def select_id_train(self):  # выписали все id поездов
-        self.cursor.execute('''SELECT id FROM train''')
-        list_tuple = self.cursor.fetchall()
-        list_id_train = list()
-        for trait in list_tuple:
-            list_id_train.append(trait[0])
-        return list_id_train
-
     def select_train(self):  # выписали все названия поездов с их характеристиками
         dict_train = dict()
         self.cursor.execute('''SELECT id, nickname, train_type, wagon_type, max_capacity, wagons_count, average_speed FROM train''')
@@ -46,10 +38,10 @@ class DBhandler:
                             (id, train.nickname, train.train_type, train.type_wagons, train.max_load, train.count_wagons, train.average_speed))
         self.conn.commit()
 
-    def insert_schedule(self, schedule, train):
+    def insert_schedule(self, id, id_train, schedule):
         self.cursor.execute('''INSERT INTO schedule
-                            (id, id_pers, otkuda, date_sending, time_sending, kuda, date_arrival, time_arrival, time_travel)
+                            (id, id_train, otkuda, date_sending, time_sending, kuda, date_arrival, time_arrival, time_travel)
                             VALUES (?,?,?,?,?,?,?,?,?)''',
-                            (train.nickname, schedule.date_sending, str(schedule.time_sending),
-                             str(schedule.time_arrival), str(schedule.time_travel), train.train_type))
+                            (id, id_train, schedule.otkuda, str(schedule.date_sending), str(schedule.time_sending),
+                             schedule.kuda, str(schedule.date_arrival), str(schedule.time_arrival), str(schedule.time_travel)))
         self.conn.commit()

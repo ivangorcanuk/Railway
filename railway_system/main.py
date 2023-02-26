@@ -23,6 +23,7 @@
 from GUI import *
 from SQLite import DBhandler
 from train_tupe import Passenger, Cargo, TrainBase, WorkingUtils
+import datetime
 
 
 class MergerSQL:
@@ -31,17 +32,14 @@ class MergerSQL:
         self.dict_city = self.sql.select_cities()  # вытянули словарь с городами
         self.dict_train = self.sql.select_train()  # вытянули словарь с поездами
         self.dict_schedule = self.sql.select_schedule()  # вытянули словарь с маршрутами
-        self.train = None
-        self.list_id_train = self.sql.select_id_train()
 
     def create_train(self, nickname, train_type, type_wagons, count_wagons, average_speed):  # создаем поезд
         max_load = WorkingUtils.max_load(type_wagons, count_wagons)  # вернули максимальную нагрузку
-        self.train = WorkingUtils.registration_train(nickname, train_type, type_wagons, max_load, count_wagons, average_speed)
-        list_id_train = self.sql.select_id_train()
-        id = WorkingUtils.id_installation(list_id_train)
-        print(id, self.train.nickname, self.train.train_type, self.train.type_wagons,
-              self.train.max_load, self.train.count_wagons, self.train.average_speed)
-        self.sql.insert_train(id, self.train)  # сохранили в базу
+        train = WorkingUtils.registration_train(nickname, train_type, type_wagons, max_load, count_wagons, average_speed)
+        id = WorkingUtils.id_installation(self.dict_train)
+        print(id, train.nickname, train.train_type, train.type_wagons,
+              train.max_load, train.count_wagons, train.average_speed)
+        self.sql.insert_train(id, train)  # сохранили в базу
 
     def create_schedule(self, otkuda, kuda, date_time, train_name):  # создаем расписание
         distance = WorkingUtils.distance(self.dict_city, otkuda, kuda)
@@ -49,24 +47,23 @@ class MergerSQL:
         for key, value in self.dict_train.items():
             if value[0] == str(train_name):
                 id_train = key
-        speed = self.dict_train[id_train][5]
-        # schedule = WorkingUtils.registration_schedule(otkuda, date_sending, time_sending, kuda, date_arrival, time_arrival, time_travel)
-        # print(schedule.otkuda, schedule.date_sending, schedule.time_sending, schedule.kuda,
-        #       schedule.date_arrival, schedule.time_arrival, schedule.time_travel)
-        print(f'Откуда - {otkuda} \n'
-              f'Куда - {kuda} \n'
-              f'Дата отправления - {date_time.date()} \n'
-              f'Время отправления - {date_time.time()} \n'
+        speed = self.dict_train[id_train][5]  # сохранили скорость
+        travel_time = datetime.timedelta(hours=distance // speed, minutes=distance % speed)  # время в пути
+        date_time_arrival = date_time + travel_time  # дата прибытия
+        id_schedule = WorkingUtils.id_installation(self.dict_schedule)
+        schedule = WorkingUtils.registration_schedule(otkuda, date_time.date(), date_time.time(),
+                                            kuda, date_time_arrival.date(), date_time_arrival.time(), travel_time)
+        print(f'Откуда - {schedule.otkuda} \n'
+              f'Дата отправления - {schedule.date_sending} \n'
+              f'Время отправления - {schedule.time_sending} \n'
+              f'Куда - {schedule.kuda} \n'
+              f'Дата прибытия - {schedule.date_arrival} \n'
+              f'Время прибытия - {schedule.time_arrival} \n'
               f'Дистанция - {distance} \n'
-              f'Скорость - {speed}')
-        #self.sql.insert_schedule(schedule, self.train)  # сохранили в базу
-
-    # def formul_distance(self, otk, kud):
-    #     x_1 = self.dict_city[otk][0]
-    #     x_2 = self.dict_city[otk][1]
-    #     y_1 = self.dict_city[kud][0]
-    #     y_2 = self.dict_city[kud][1]
-    #     return WorkingUtils.distance(x_1, x_2, y_1, y_2)
+              f'Скорость - {speed} \n'
+              f'Время в пути - {schedule.time_travel} \n'
+              f'id - {id_schedule}')
+        self.sql.insert_schedule(id_schedule, id_train, schedule)  # сохранили в базу
 
 
 class MergerData:

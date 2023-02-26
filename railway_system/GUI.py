@@ -65,6 +65,13 @@ class ViewingSchedule(tk.Toplevel):  # просмотр расписания
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
+        self.dict_train = self.parent.mainLogic.dict_train  # сохранили словарь с поездами
+        self.dict_schedule = self.parent.mainLogic.dict_schedule  # сохранили словарь с маршрутами
+        self.list_id_train = list()  # создали список с id поездов, у которых есть маршрут
+        for key in self.dict_schedule.keys():
+            self.list_id_train.append(self.dict_schedule[key][0])  # заполнили его
+        self.window_schedule = None  # окно для регистрации маршрута
+
         self.title('Просмотр расписания')
         self.geometry(f'430x360+500+50')
         self.value_year = tk.StringVar(self, '2023')  # в каком году
@@ -93,11 +100,16 @@ class ViewingSchedule(tk.Toplevel):  # просмотр расписания
         MainMenu.radiobutton(self, 'грузовой', self.valueStr).place(x=250, y=100, width=90, height=20)
 
         self.text = MainMenu.text(self)
-        self.text.insert('end', f'Выберите текс')
+        for i in self.dict_schedule:  # проходим циклом по словарю с маршрутами
+            otkuda = self.dict_schedule[i][1] + ' - ' + self.dict_schedule[i][2] + ' - ' + self.dict_schedule[i][3]
+            kuda = self.dict_schedule[i][4] + ' - ' + self.dict_schedule[i][5] + ' - ' + \
+                   self.dict_schedule[i][6]
+            time_travel = self.dict_schedule[i][7]
+            self.text.insert('end', f' {otkuda} \n {kuda} \n Время в пути - {time_travel} \n')  # выводим строку
         self.text.place(x=10, y=130, width=410, height=190)
 
         MainMenu.button(self, 'Назад', self.destroy).place(x=10, y=330, width=80, height=20)
-        MainMenu.button(self, 'Добавить', self.route_registration).place(x=250, y=330, width=80, height=20)
+        MainMenu.button(self, 'Добавить', self.examination).place(x=250, y=330, width=80, height=20)
         MainMenu.button(self, 'Искать', self.search).place(x=340, y=330, width=80, height=20)
 
     def search(self):
@@ -110,32 +122,39 @@ class ViewingSchedule(tk.Toplevel):  # просмотр расписания
         window.geometry(f'430x360+500+50')
         return window
 
-    def route_registration(self):  # создали окно для регистрации маршрута
-        window_schedule = ViewingSchedule.window()
+    def examination(self):  # проверка на свободные поезда
+        for key in self.parent.mainLogic.dict_train.keys():
+            if key not in self.dict_schedule.keys():  # есть ли нет первичного ключа поезда среди вторичных ключей маршрутов
+                return self.route_registration()
+        self.text.delete('1.0', 'end')  # удалили предыдущий текст в текстовом окне
+        self.text.insert('end', f' Нет свободного поезда. \n')
 
-        MainMenu.label(window_schedule, text='Откуда:').place(x=10, y=40, width=65, height=20)
-        self.combo1 = ttk.Combobox(window_schedule, values=self.parent.list_city, font=('Arial', 10))
+    def route_registration(self):  # создали окно для регистрации маршрута
+        self.window_schedule = ViewingSchedule.window()
+
+        MainMenu.label(self.window_schedule, text='Откуда:').place(x=10, y=40, width=65, height=20)
+        self.combo1 = ttk.Combobox(self.window_schedule, values=self.parent.list_city, font=('Arial', 10))
         self.combo1.place(x=190, y=40, width=230, height=20)
 
-        MainMenu.label(window_schedule, text='Куда:').place(x=10, y=70, width=50, height=20)
-        self.combo2 = ttk.Combobox(window_schedule, values=self.parent.list_city, font=('Arial', 10))
+        MainMenu.label(self.window_schedule, text='Куда:').place(x=10, y=70, width=50, height=20)
+        self.combo2 = ttk.Combobox(self.window_schedule, values=self.parent.list_city, font=('Arial', 10))
         self.combo2.place(x=190, y=70, width=230, height=20)
 
-        MainMenu.label(window_schedule, text='Дата отправления:').place(x=10, y=100, width=150, height=20)
-        self.combo3 = ttk.Combobox(window_schedule, values=MergerData.count_num(1, 31), font=('Arial', 10))
+        MainMenu.label(self.window_schedule, text='Дата отправления:').place(x=10, y=100, width=150, height=20)
+        self.combo3 = ttk.Combobox(self.window_schedule, values=MergerData.count_num(1, 31), font=('Arial', 10))
         self.combo3.place(x=190, y=100, width=40, height=20)
-        self.combo3_1 = ttk.Combobox(window_schedule, values=MergerData.count_num(1, 12), font=('Arial', 10))
+        self.combo3_1 = ttk.Combobox(self.window_schedule, values=MergerData.count_num(1, 12), font=('Arial', 10))
         self.combo3_1.place(x=230, y=100, width=40, height=20)
-        MainMenu.entry(window_schedule, self.value_year).place(x=270, y=100, width=40, height=20)
+        MainMenu.entry(self.window_schedule, self.value_year).place(x=270, y=100, width=40, height=20)
 
-        MainMenu.label(window_schedule, text='Время отправки:').place(x=10, y=130, width=130, height=20)
-        self.combo4 = ttk.Combobox(window_schedule, values=MergerData.count_num(0, 24), font=('Arial', 10))
+        MainMenu.label(self.window_schedule, text='Время отправки:').place(x=10, y=130, width=130, height=20)
+        self.combo4 = ttk.Combobox(self.window_schedule, values=MergerData.count_num(0, 24), font=('Arial', 10))
         self.combo4.place(x=190, y=130, width=40, height=20)
-        self.combo4_1 = ttk.Combobox(window_schedule, values=MergerData.count_num(0, 60), font=('Arial', 10))
+        self.combo4_1 = ttk.Combobox(self.window_schedule, values=MergerData.count_num(0, 60), font=('Arial', 10))
         self.combo4_1.place(x=230, y=130, width=40, height=20)
 
-        MainMenu.button(window_schedule, 'Назад', window_schedule.destroy).place(x=10, y=330, width=90, height=20)
-        MainMenu.button(window_schedule, 'Сохранить', self.wind_train_choose).place(x=330, y=330, width=90, height=20)
+        MainMenu.button(self.window_schedule, 'Назад', self.window_schedule.destroy).place(x=10, y=330, width=90, height=20)
+        MainMenu.button(self.window_schedule, 'Сохранить', self.wind_train_choose).place(x=330, y=330, width=90, height=20)
 
     def wind_train_choose(self):
         if self.combo1.get() and self.combo2.get() and self.combo3.get() and self.combo3_1.get() and str(self.combo4.get()) and str(self.combo4_1.get()):
@@ -146,11 +165,11 @@ class ViewingSchedule(tk.Toplevel):  # просмотр расписания
             MainMenu.entry(self.window_train_choose, self.train).place(x=145, y=95, width=140, height=20)
 
             text = MainMenu.text(self.window_train_choose)
-            dict_train = self.parent.mainLogic.dict_train
-            for i in dict_train:  # проходим циклом по словарю с поездами
-                stroka = dict_train[i][0] + ' - ' + dict_train[i][1] + ' - ' + dict_train[i][2] + ' - ' + \
-                         str(dict_train[i][3]) + ' - ' + str(dict_train[i][4]) + ' - ' + str(dict_train[i][5])
-                text.insert('end', f'{stroka}\n')  # выводим строку
+            for key in self.dict_train.keys():
+                if key not in self.list_id_train:  # если ли нет первичного ключа поезда среди вторичных ключей маршрутов
+                    stroka = self.dict_train[key][0] + ' - ' + self.dict_train[key][1] + ' - ' + self.dict_train[key][2] + ' - ' + \
+                         str(self.dict_train[key][3]) + ' - ' + str(self.dict_train[key][4]) + ' - ' + str(self.dict_train[key][5])
+                    text.insert('end', f'{stroka}\n')  # выводим строку
             text.place(x=10, y=130, width=410, height=190)
 
             MainMenu.button(self.window_train_choose, 'Назад', self.window_train_choose.destroy).place(x=10, y=330, width=90, height=20)
@@ -158,11 +177,11 @@ class ViewingSchedule(tk.Toplevel):  # просмотр расписания
 
     def save(self):
         if self.train.get():  # добавить, чтобы проверка осуществлялась согласно списку существующих поездов
-            data_time = datetime.datetime(int(self.value_year.get()), int(self.combo3_1.get()), int(self.combo3.get()), int(self.combo4.get()), int(self.combo4_1.get()))
-
-            # travel_time = datetime.timedelta(hours=distance // average_speed, minutes=distance % average_speed)  # время в пути
+            data_time = datetime.datetime(int(self.value_year.get()), int(self.combo3_1.get()), int(self.combo3.get()),
+                                          int(self.combo4.get()), int(self.combo4_1.get()))
             self.parent.mainLogic.create_schedule(self.combo1.get(), self.combo2.get(), data_time, self.train.get())  # создали маршрут
             self.window_train_choose.destroy()
+            self.window_schedule.destroy()
 
 
 """Просмотр поездов"""
