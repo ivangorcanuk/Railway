@@ -1,13 +1,14 @@
 import tkinter as tk
 from tkinter import ttk
-from main import MergerSQL, MergerData
+from main import MainLogic, MergerData
 import datetime
+# не обновляется окно после добавления поезда
 
 
 class MainMenu(tk.Tk):  # главное меню
     def __init__(self):
         super().__init__()
-        self.mainLogic = MergerSQL()
+        self.mainLogic = MainLogic()
         self.list_city = list()
         for keys in self.mainLogic.dict_city.keys():
             self.list_city.append(keys)
@@ -23,6 +24,13 @@ class MainMenu(tk.Tk):  # главное меню
         self.button(self, 'Exit', self.open_window5).place(x=60, y=200, width=300, height=20)
 
     @staticmethod
+    def window():
+        window = tk.Toplevel()
+        window.grab_set()
+        window.geometry(f'430x360+500+50')
+        return window
+
+    @staticmethod
     def button(window, text, command):
         return tk.Button(window, text=text, font=('Arial', 13), command=command)
 
@@ -35,8 +43,8 @@ class MainMenu(tk.Tk):  # главное меню
         return tk.Entry(window, font=('Arial', 10), textvariable=variable)
 
     @staticmethod
-    def radiobutton(window, value, variable):
-        return tk.Radiobutton(window, text=value, font=('Arial', 13), variable=variable, value=value)
+    def radiobutton(window, value, variable, com):
+        return tk.Radiobutton(window, text=value, font=('Arial', 13), variable=variable, value=value, command=com)
 
     @staticmethod
     def text(window):
@@ -102,7 +110,6 @@ class ViewingSchedule(tk.Toplevel):  # просмотр расписания
         MainMenu.button(self, 'Назад', self.destroy).place(x=10, y=330, width=80, height=20)
         MainMenu.button(self, 'Добавить', self.examination).place(x=250, y=330, width=80, height=20)
         MainMenu.button(self, 'Искать', self.search).place(x=340, y=330, width=80, height=20)
-        MainMenu.button(self, 'Обновить', self.update).place(x=160, y=330, width=80, height=20)
 
     def update(self):  # обновить
         self.text.delete('1.0', 'end')  # удалили предыдущий текст в текстовом окне
@@ -114,7 +121,7 @@ class ViewingSchedule(tk.Toplevel):  # просмотр расписания
                              f' {otkuda} \n {kuda} \n Время в пути - {self.dict_schedule[i][7]} \n')  # выводим строку
             self.text.insert('end', '\n')
 
-    def search(self):
+    def search(self):  # поиск
         if self.combo1.get() and self.combo2.get() and self.combo3.get() and self.combo3_1.get():
             data = datetime.date(int(self.value_year.get()), int(self.combo3_1.get()), int(self.combo3.get()))
             for key in self.dict_schedule.keys():
@@ -126,22 +133,15 @@ class ViewingSchedule(tk.Toplevel):  # просмотр расписания
                     self.text.delete('1.0', 'end')  # удалили предыдущий текст в текстовом окне
                     self.text.insert('end', f' {otkuda} \n {kuda} \n Время в пути - {self.dict_schedule[key][7]} \n')
 
-    @staticmethod
-    def window():
-        window = tk.Toplevel()
-        window.grab_set()
-        window.geometry(f'430x360+500+50')
-        return window
-
     def examination(self):  # проверка на свободные поезда
-        for key in self.parent.mainLogic.dict_train.keys():
+        for key in self.dict_train.keys():
             if key not in self.dict_schedule.keys():  # есть ли нет первичного ключа поезда среди вторичных ключей маршрутов
                 return self.route_registration()
-        self.text.delete('1.0', 'end')  # удалили предыдущий текст в текстовом окне
+        self.text.delete('1.0', 'end')  # иначе удалили предыдущий текст в текстовом окне
         self.text.insert('end', f' Нет свободного поезда. \n')
 
     def route_registration(self):  # создали окно для регистрации маршрута
-        self.window_schedule = ViewingSchedule.window()
+        self.window_schedule = MainMenu.window()
 
         MainMenu.label(self.window_schedule, text='Откуда:').place(x=10, y=40, width=65, height=20)
         self.combo1 = ttk.Combobox(self.window_schedule, values=self.parent.list_city, font=('Arial', 10))
@@ -169,7 +169,7 @@ class ViewingSchedule(tk.Toplevel):  # просмотр расписания
 
     def wind_train_choose(self):
         if self.combo1.get() and self.combo2.get() and self.combo3.get() and self.combo3_1.get() and str(self.combo4.get()) and str(self.combo4_1.get()):
-            self.window_train_choose = ViewingSchedule.window()
+            self.window_train_choose = MainMenu.window()
 
             MainMenu.label(self.window_train_choose, text='Выберите поезд,\n который поедет по новому маршруту').place(x=10, y=40, width=410, height=50)
 
@@ -191,6 +191,7 @@ class ViewingSchedule(tk.Toplevel):  # просмотр расписания
             data_time = datetime.datetime(int(self.value_year.get()), int(self.combo3_1.get()), int(self.combo3.get()),
                                           int(self.combo4.get()), int(self.combo4_1.get()))
             self.parent.mainLogic.create_schedule(self.combo1.get(), self.combo2.get(), data_time, self.train.get())  # создали маршрут
+            self.update()
             self.window_train_choose.destroy()
             self.window_schedule.destroy()
 
@@ -204,86 +205,111 @@ class TrainView(tk.Toplevel):  # просмотр поездов
         self.title('Просмотр поездов')
         self.geometry(f'430x360+500+50')
 
-        self.parent = parent.mainLogic
+        self.mainLogic = parent.mainLogic
+        self.dict_train = self.mainLogic.dict_train  # сохранили словарь с поездами
+        self.window_train = None  # окно для регистрации поездов
         self.train_name = tk.StringVar()  # название поезда
-        self.valueStr = tk.StringVar(self, '1')  # тип поезда (радиокнопка)
+        self.valueStr = tk.StringVar(self, '1')  # тип поезда
         self.load_max = tk.StringVar()  # максимальная нагрузка поезда
         self.wagon_typ = tk.IntVar()  # тип вагонов
         self.wagon_count = tk.StringVar()  # кол-во вагонов
         self.spead = tk.StringVar()  # скорость
-        self.window_train = None  # окно для регистрации поездов
 
         MainMenu.label(self, 'Укажите имя поезда:').place(x=10, y=10, width=180, height=20)
         MainMenu.entry(self, self.train_name).place(x=200, y=10, width=140, height=20)
         MainMenu.button(self, 'Удалить', self.delete).place(x=350, y=10, width=70, height=20)
         MainMenu.label(self, 'Будьте внимательны, вместе с поездом так же \n удалится расписание по которому он ходил!', 'red').place(x=10, y=40, width=410, height=40)
 
-        MainMenu.radiobutton(self, 'пассажирский', self.valueStr).place(x=50, y=90, width=130, height=20)
-        MainMenu.radiobutton(self, 'грузовой', self.valueStr).place(x=250, y=90, width=90, height=20)
-
         self.text = MainMenu.text(self)
         self.update()
         self.text.place(x=10, y=120, width=410, height=200)
 
         MainMenu.button(self, 'Назад', self.destroy).place(x=10, y=330, width=80, height=20)
-        MainMenu.button(self, 'Обновить', self.update).place(x=340, y=330, width=80, height=20)
-        MainMenu.button(self, 'Создать', self.train_create).place(x=250, y=330, width=80, height=20)
+        MainMenu.button(self, 'Создать', self.tup_choose).place(x=340, y=330, width=80, height=20)
 
     def update(self):
         self.text.delete('1.0', 'end')  # удалили предыдущий текст в текстовом окне
-        dict_train = self.parent.dict_train
-        for i in dict_train:
-            stroka = dict_train[i][0] + ' - ' + dict_train[i][1] + ' - ' + dict_train[i][2] + ' - ' + str(dict_train[i][3]) + ' - ' + str(dict_train[i][4]) + ' - ' + str(dict_train[i][5])
+        for i in self.dict_train:
+            stroka = self.dict_train[i][0] + ' - ' + self.dict_train[i][1] + ' - ' + self.dict_train[i][2] + ' - ' + \
+                     str(self.dict_train[i][3]) + ' - ' + str(self.dict_train[i][4]) + ' - ' + str(self.dict_train[i][5])
             self.text.insert('end', f'{stroka}\n')  # выводим строку
 
-    def delete(self):
-        print(self.train_name.get())
+    def delete(self):  # удалили поезд
+        for key in self.dict_train.keys():
+            if self.train_name.get() == self.dict_train[key][0]:
+                self.mainLogic.delete_train(key)
+                del key  # удалили из словаря поезд
+                break
+        self.update()  # обновили окно
 
-    def train_create(self):
-        if self.valueStr.get() == MergerData.list_train_type[0]:
-            count_wag = MergerData.count_num(1, 20)  # вытянули список с цифрами из которых пользователь выберет кол-во ыагонов
-            self.window_train = self.window(count_wag)
+    # def train_create(self):
+    #     count_wag = MergerData.count_num(1, 20)  # вытянули список с цифрами из которых пользователь выберет кол-во вагонов
+    #     self.window_train = self.window(count_wag)
+    #
+    #     MainMenu.label(self.window_train, text='Выберите тип вагонов:\n'
+    #                                       '(общий - 70 мест\n'
+    #                                       ' плацкарт - 54 места\n'
+    #                                       ' купе - 36 мест').place(x=10, y=70, width=200, height=80)
+    #     self.wagon_typ = ttk.Combobox(self.window_train, values=MergerData.list_type_pas, font=('Arial', 10))
+    #     self.wagon_typ.place(x=220, y=70, width=200, height=20)
+    #
+    #
+    #     count_wag = MergerData.count_num(1, 50)
+    #     self.window_train = self.window(count_wag)
+    #
+    #     MainMenu.label(self.window_train, text='Выберите тип вагонов:\n'
+    #                                       '(открытый - 70т\n'
+    #                                       ' закрытый - 50т)').place(x=10, y=70, width=200, height=80)
+    #     self.wagon_typ = ttk.Combobox(self.window_train, values=MergerData.list_type_car, font=('Arial', 10))
+    #     self.wagon_typ.place(x=220, y=70, width=200, height=20)
 
-            MainMenu.label(self.window_train, text='Выберите тип вагонов:\n'
-                                              '(общий - 70 мест\n'
-                                              ' плацкарт - 54 места\n'
-                                              ' купе - 36 мест').place(x=10, y=40, width=200, height=80)
-            self.wagon_typ = ttk.Combobox(self.window_train, values=MergerData.list_type_pas, font=('Arial', 10))
-            self.wagon_typ.place(x=220, y=70, width=200, height=20)
-
-        elif self.valueStr.get() == MergerData.list_train_type[1]:
+    def com(self):  # создали окно для регистрации поезда
+        label_text = str()
+        wagon_typ = list()
+        count_wag = list()
+        if self.valueStr.get() == 'пассажирский':
+            print('пассажирский')
+            label_text = 'Выберите тип вагонов: \n (общий - 70 мест \n плацкарт - 54 места \n купе - 36 мест'
+            wagon_typ = MergerData.list_type_pas
+            count_wag = MergerData.count_num(1, 20)
+        elif self.valueStr.get() == 'грузовой':
+            print('грузовой')
+            label_text = 'Выберите тип вагонов: \n (открытый - 70т \n закрытый - 50т)'
+            wagon_typ = MergerData.list_type_car
             count_wag = MergerData.count_num(1, 50)
-            self.window_train = self.window(count_wag)
+        self.train_create(label_text, wagon_typ, count_wag)
 
-            MainMenu.label(self.window_train, text='Выберите тип вагонов:\n'
-                                              '(открытый - 70т\n'
-                                              ' закрытый - 50т)').place(x=10, y=40, width=200, height=80)
-            self.wagon_typ = ttk.Combobox(self.window_train, values=MergerData.list_type_car, font=('Arial', 10))
-            self.wagon_typ.place(x=220, y=70, width=200, height=20)
+    def tup_choose(self):  # выбрать тип поезда
+        self.window_train = MainMenu.window()
+        self.window_train.title(f'Создать поезд')
 
-    def window(self, count_wag):  # создали окно для регистрации поезда
-        window_train = ViewingSchedule.window()
-        window_train.title(f'Создать {MergerData.list_train_type[0]} поезд')
+        MainMenu.radiobutton(self.window_train, 'пассажирский', self.valueStr, self.com).place(x=50, y=10, width=130, height=20)
+        MainMenu.radiobutton(self.window_train, 'грузовой', self.valueStr, self.com).place(x=270, y=10, width=100, height=20)
+
+    def train_create(self, label_text, wagon_typ, count_wag):  # создали окно для регистрации поезда
         self.train_name = tk.StringVar()
         self.spead = tk.StringVar()
 
-        MainMenu.label(window_train, text='Укажите название поезда:').place(x=10, y=10, width=200, height=20)
-        MainMenu.entry(window_train, self.train_name).place(x=220, y=10, width=200, height=20)
+        MainMenu.label(self.window_train, text='Укажите название поезда:').place(x=10, y=40, width=200, height=20)
+        MainMenu.entry(self.window_train, self.train_name).place(x=220, y=40, width=200, height=20)
 
-        MainMenu.label(window_train, text='Выберите кол-во вагонов:').place(x=10, y=130, width=200, height=20)
-        self.wagon_count = ttk.Combobox(window_train, values=count_wag, font=('Arial', 10))
-        self.wagon_count.place(x=220, y=130, width=200, height=20)
+        MainMenu.label(self.window_train, text=label_text).place(x=10, y=70, width=200, height=80)
+        self.wagon_typ = ttk.Combobox(self.window_train, values=wagon_typ, font=('Arial', 10))
+        self.wagon_typ.place(x=220, y=70, width=200, height=20)
 
-        MainMenu.label(window_train, text='Укажите скорость:').place(x=10, y=160, width=150, height=20)
-        MainMenu.entry(window_train, self.spead).place(x=220, y=160, width=200, height=20)
+        MainMenu.label(self.window_train, text='Выберите кол-во вагонов:').place(x=10, y=160, width=200, height=20)
+        self.wagon_count = ttk.Combobox(self.window_train, values=count_wag, font=('Arial', 10))
+        self.wagon_count.place(x=220, y=160, width=200, height=20)
 
-        MainMenu.button(window_train, 'Назад', window_train.destroy).place(x=10, y=330, width=60, height=20)
-        MainMenu.button(window_train, 'Сохранить', self.save).place(x=330, y=330, width=90, height=20)
-        return window_train
+        MainMenu.label(self.window_train, text='Укажите скорость:').place(x=10, y=190, width=150, height=20)
+        MainMenu.entry(self.window_train, self.spead).place(x=220, y=190, width=200, height=20)
+
+        MainMenu.button(self.window_train, 'Назад',  self.window_train.destroy).place(x=10, y=330, width=60, height=20)
+        MainMenu.button(self.window_train, 'Сохранить', self.save).place(x=330, y=330, width=90, height=20)
 
     def save(self):
         if self.train_name.get() and self.valueStr.get() and self.wagon_typ.get() and self.wagon_count.get() and self.spead.get():
-            self.parent.create_train(self.train_name.get(), self.valueStr.get(), str(self.wagon_typ.get()), int(self.wagon_count.get()), self.spead.get())
+            self.mainLogic.create_train(self.train_name.get(), self.valueStr.get(), str(self.wagon_typ.get()), int(self.wagon_count.get()), self.spead.get())
             print(f'Название - {self.train_name.get()} \n'
                   f'Тип поезда - {self.valueStr.get()} \n'
                   f'Тип вагонов - {self.wagon_typ.get()} \n'
@@ -291,7 +317,7 @@ class TrainView(tk.Toplevel):  # просмотр поездов
                   f'Макс нагрузка - {MergerData.max_load(str(self.wagon_typ.get()), int(self.wagon_count.get()))} \n'
                   f'Скорость - {self.spead.get()}')
             self.window_train.destroy()
-            self.destroy()
+            self.update()
 
 
 """Задачи"""
@@ -300,7 +326,7 @@ class TrainView(tk.Toplevel):  # просмотр поездов
 class ScheduleRegistration(tk.Toplevel):
     def __init__(self, parent):
         super().__init__(parent)
-        self.mainLogic = parent.mainLogic  # сохранили объект класса MergerSQL
+        self.mainLogic = parent.mainLogic  # сохранили объект класса MainLogic
         self.list_city = parent.list_city  # сохранили список с городами
         self.geometry(f'430x360+500+50')
         self.title('Регистрация расписания')
@@ -329,7 +355,7 @@ class ScheduleRegistration(tk.Toplevel):
 # class ScheduleRegistration(tk.Toplevel):  # регистрация расписания
 #     def __init__(self, parent):
 #         super().__init__(parent)
-#         self.mainLogic = parent.mainLogic  # сохранили объект класса MergerSQL
+#         self.mainLogic = parent.mainLogic  # сохранили объект класса MainLogic
 #         self.list_city = parent.list_city  # сохранили список с городами
 #         self['bg'] = '#33ffe6'
 #         self.geometry(f'430x380+500+50')

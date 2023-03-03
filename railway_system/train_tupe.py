@@ -81,16 +81,6 @@ class Schedule:  # расписание
 
 
 class WorkingUtils:
-    @staticmethod  # регистрация поезда
-    def registration_train(nickname, train_type, type_wagons, max, count_wagons, average_speed):
-        if train_type == TrainBase.list_train_type[0]:  # если поезд пассажирский
-            return Passenger(nickname, train_type, type_wagons, max, count_wagons, average_speed)
-        else:
-            return Cargo(nickname, train_type, type_wagons, max, count_wagons, average_speed)
-
-    @staticmethod  # создание расписания
-    def registration_schedule(otkuda, date_sending, time_sending, kuda, date_arrival, time_arrival, time_travel):
-        return Schedule(otkuda, date_sending, time_sending, kuda, date_arrival, time_arrival, time_travel)
 
     @staticmethod  # возвращает список с нужным кол-вом чисел
     def count_num(min_number, max_number):

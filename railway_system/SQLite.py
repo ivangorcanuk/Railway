@@ -31,17 +31,21 @@ class DBhandler:
             dict_schedule[trait[0]] = trait[1], trait[2], trait[3], trait[4], trait[5], trait[6], trait[7], trait[8]
         return dict_schedule
 
-    def insert_train(self, id, train):
-        self.cursor.execute('''INSERT INTO train
-                            (id, nickname, train_type, wagon_type, max_capacity, wagons_count, average_speed)
-                            VALUES (?,?,?,?,?,?,?)''',
-                            (id, train.nickname, train.train_type, train.type_wagons, train.max_load, train.count_wagons, train.average_speed))
+    def insert_train(self, train):
+        self.cursor.execute('''INSERT INTO ata
+                            (nickname, train_type, wagon_type, max_capacity, wagons_count, average_speed)
+                            VALUES (?,?,?,?,?,?)''',
+                            (train.nickname, train.train_type, train.type_wagons, train.max_load, train.count_wagons, train.average_speed))
         self.conn.commit()
 
-    def insert_schedule(self, id, id_train, schedule):
+    def insert_schedule(self, id_train, schedule):
         self.cursor.execute('''INSERT INTO schedule
-                            (id, id_train, otkuda, date_sending, time_sending, kuda, date_arrival, time_arrival, time_travel)
-                            VALUES (?,?,?,?,?,?,?,?,?)''',
-                            (id, id_train, schedule.otkuda, str(schedule.date_sending), str(schedule.time_sending),
+                            (id_train, otkuda, date_sending, time_sending, kuda, date_arrival, time_arrival, time_travel)
+                            VALUES (?,?,?,?,?,?,?,?)''',
+                            (id_train, schedule.otkuda, str(schedule.date_sending), str(schedule.time_sending),
                              schedule.kuda, str(schedule.date_arrival), str(schedule.time_arrival), str(schedule.time_travel)))
+        self.conn.commit()
+
+    def delete_train(self, id_train):  # удалили поезд по его id
+        self.cursor.execute(f'''DELETE FROM train WHERE id = {id_train} ''')
         self.conn.commit()
