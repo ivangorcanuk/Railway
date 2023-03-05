@@ -36,33 +36,28 @@ class MainLogic:
             train = Passenger(nickname, train_type, type_wagons, max_load, count_wagons, average_speed)
         else:
             train = Cargo(nickname, train_type, type_wagons, max_load, count_wagons, average_speed)
-        id_train = WorkingUtils.id_installation(self.dict_train)
-        self.dict_train[id_train] = (nickname, train_type, type_wagons, max_load, count_wagons, average_speed)
+        self.dict_train[nickname] = (train_type, type_wagons, max_load, count_wagons, average_speed)
         for key, value in self.dict_train.items():
             print(key, value)
-        #self.__sql.insert_train(train)  # сохранили в базу
+        self.__sql.insert_train(train)  # сохранили в базу
 
     def create_schedule(self, otkuda, kuda, date_time, train_name):  # создаем расписание
-        distance = WorkingUtils.distance(self.dict_city, otkuda, kuda)
-        id_train = int()
-        for key, value in self.dict_train.items():
-            if value[0] == str(train_name):
-                id_train = key
-        speed = self.dict_train[id_train][5]  # сохранили скорость
+        distance = WorkingUtils.distance(self.dict_city, otkuda, kuda)  # нашли дистанцию
+        speed = self.dict_train[train_name][4]  # сохранили скорость
         travel_time = datetime.timedelta(hours=distance // speed, minutes=distance % speed)  # время в пути
         date_time_arrival = date_time + travel_time  # дата прибытия
         schedule = Schedule(otkuda, date_time.date(), date_time.time(),
                                             kuda, date_time_arrival.date(), date_time_arrival.time(), travel_time)
         id_schedule = WorkingUtils.id_installation(self.dict_schedule)
-        self.dict_schedule[id_schedule] = (id_train, otkuda, str(date_time.date()), str(date_time.time()),
+        self.dict_schedule[id_schedule] = (id_schedule, train_name, otkuda, str(date_time.date()), str(date_time.time()),
                                             kuda, str(date_time_arrival.date()), str(date_time_arrival.time()), str(travel_time))
         for key, value in self.dict_schedule.items():
             print(key, value)
-        #self.__sql.insert_schedule(id_train, schedule)  # сохранили в базу
+        self.__sql.insert_schedule(id_schedule, train_name, schedule)  # сохранили в базу
 
-    def delete_train(self, id_train):  # удаляем поезд
-        self.__sql.delete_train(id_train)  # из базы
-        del self.dict_train[id_train]  # из словаря
+    def delete_train(self, nickname):  # удаляем поезд
+        self.__sql.delete_train(nickname)  # из базы
+        del self.dict_train[nickname]  # из словаря
         for key, value in self.dict_train.items():
             print(key, value)
 

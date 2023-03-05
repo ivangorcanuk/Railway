@@ -108,17 +108,21 @@ class ViewingSchedule(tk.Toplevel):  # просмотр расписания
         self.text.place(x=10, y=100, width=410, height=220)
 
         MainMenu.button(self, 'Назад', self.destroy).place(x=10, y=330, width=80, height=20)
+        MainMenu.button(self, 'Удалить', self.destroy).place(x=160, y=330, width=80, height=20)
         MainMenu.button(self, 'Добавить', self.examination).place(x=250, y=330, width=80, height=20)
         MainMenu.button(self, 'Искать', self.search).place(x=340, y=330, width=80, height=20)
 
+    def delete(self):  # удаляет маршрут, но не удаляет поезд
+        pass
+
     def update(self):  # обновить
         self.text.delete('1.0', 'end')  # удалили предыдущий текст в текстовом окне
-        for i in self.dict_schedule:  # проходим циклом по словарю с маршрутами
-            otkuda = self.dict_schedule[i][1] + ' - ' + self.dict_schedule[i][2] + ' - ' + self.dict_schedule[i][3]
-            kuda = self.dict_schedule[i][4] + ' - ' + self.dict_schedule[i][5] + ' - ' + \
-                   self.dict_schedule[i][6]
-            self.text.insert('end',
-                             f' {otkuda} \n {kuda} \n Время в пути - {self.dict_schedule[i][7]} \n')  # выводим строку
+        for value in self.dict_schedule.values():  # проходим циклом по словарю с маршрутами
+            otkuda = value[1] + ' - ' + value[2] + ' - ' + value[3]
+            kuda = value[4] + ' - ' + value[5] + ' - ' + value[6]
+            self.text.insert('end', f'{value[0]} - {otkuda} \n'
+                                    f'              {kuda} \n'
+                                    f'              Время в пути - {value[7]} \n')  # выводим строку
             self.text.insert('end', '\n')
 
     def search(self):  # поиск
@@ -176,10 +180,10 @@ class ViewingSchedule(tk.Toplevel):  # просмотр расписания
             MainMenu.entry(self.window_train_choose, self.train).place(x=145, y=95, width=140, height=20)
 
             text = MainMenu.text(self.window_train_choose)
-            for key in self.dict_train.keys():
+            for key, value in self.dict_train.items():
                 if key not in self.list_id_train:  # если ли нет первичного ключа поезда среди вторичных ключей маршрутов
-                    stroka = self.dict_train[key][0] + ' - ' + self.dict_train[key][1] + ' - ' + self.dict_train[key][2] + ' - ' + \
-                         str(self.dict_train[key][3]) + ' - ' + str(self.dict_train[key][4]) + ' - ' + str(self.dict_train[key][5])
+                    stroka = key + ' - ' + value[0] + ' - ' + value[1] + ' - ' + \
+                             str(value[2]) + ' - ' + str(value[3]) + ' - ' + str(value[4])
                     text.insert('end', f'{stroka}\n')  # выводим строку
             text.place(x=10, y=130, width=410, height=190)
 
@@ -229,39 +233,16 @@ class TrainView(tk.Toplevel):  # просмотр поездов
 
     def update(self):
         self.text.delete('1.0', 'end')  # удалили предыдущий текст в текстовом окне
-        for i in self.dict_train:
-            stroka = self.dict_train[i][0] + ' - ' + self.dict_train[i][1] + ' - ' + self.dict_train[i][2] + ' - ' + \
-                     str(self.dict_train[i][3]) + ' - ' + str(self.dict_train[i][4]) + ' - ' + str(self.dict_train[i][5])
+        for key, value in self.dict_train.items():
+            stroka = key + ' - ' + value[0] + ' - ' + value[1] + ' - ' + \
+                     str(value[2]) + ' - ' + str(value[3]) + ' - ' + str(value[4])
             self.text.insert('end', f'{stroka}\n')  # выводим строку
 
     def delete(self):  # удалили поезд
-        for key in self.dict_train.keys():
-            if self.train_name.get() == self.dict_train[key][0]:
-                self.mainLogic.delete_train(key)
-                del key  # удалили из словаря поезд
-                break
+        if self.train_name.get() in self.dict_train:
+            self.mainLogic.delete_train(self.train_name.get())
+            #del self.dict_train[self.train_name.get()]  # удалили из словаря поезд
         self.update()  # обновили окно
-
-    # def train_create(self):
-    #     count_wag = MergerData.count_num(1, 20)  # вытянули список с цифрами из которых пользователь выберет кол-во вагонов
-    #     self.window_train = self.window(count_wag)
-    #
-    #     MainMenu.label(self.window_train, text='Выберите тип вагонов:\n'
-    #                                       '(общий - 70 мест\n'
-    #                                       ' плацкарт - 54 места\n'
-    #                                       ' купе - 36 мест').place(x=10, y=70, width=200, height=80)
-    #     self.wagon_typ = ttk.Combobox(self.window_train, values=MergerData.list_type_pas, font=('Arial', 10))
-    #     self.wagon_typ.place(x=220, y=70, width=200, height=20)
-    #
-    #
-    #     count_wag = MergerData.count_num(1, 50)
-    #     self.window_train = self.window(count_wag)
-    #
-    #     MainMenu.label(self.window_train, text='Выберите тип вагонов:\n'
-    #                                       '(открытый - 70т\n'
-    #                                       ' закрытый - 50т)').place(x=10, y=70, width=200, height=80)
-    #     self.wagon_typ = ttk.Combobox(self.window_train, values=MergerData.list_type_car, font=('Arial', 10))
-    #     self.wagon_typ.place(x=220, y=70, width=200, height=20)
 
     def com(self):  # создали окно для регистрации поезда
         label_text = str()
