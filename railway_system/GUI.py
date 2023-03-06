@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from main import MainLogic, MergerData
 import datetime
-# не обновляется окно после добавления поезда
+import calendar
 
 
 class MainMenu(tk.Tk):  # главное меню
@@ -87,6 +87,7 @@ class ViewingSchedule(tk.Toplevel):  # просмотр расписания
         self.combo4_1 = None  # время отправки (минуты)
         self.window_train_choose = None  # окно для выбора поездов при регистрации нового маршрута
         self.train = tk.StringVar()  # тот самый поезд которого выберет пользователь
+        self.route = None  # выбранный пользователем маршрут
 
         MainMenu.label(self, text='Откуда:').place(x=10, y=10, width=65, height=20)
         self.combo1 = ttk.Combobox(self, values=self.parent.list_city, font=('Arial', 10))
@@ -97,6 +98,7 @@ class ViewingSchedule(tk.Toplevel):  # просмотр расписания
         self.combo2.place(x=190, y=40, width=230, height=20)
 
         MainMenu.label(self, text='Когда:').place(x=10, y=70, width=60, height=20)
+        MainMenu.button(self, 'V', self.open_window4).place(x=140, y=70, width=40, height=20)
         self.combo3 = ttk.Combobox(self, values=MergerData.count_num(1, 31), font=('Arial', 10))
         self.combo3.place(x=190, y=70, width=40, height=20)
         self.combo3_1 = ttk.Combobox(self, values=MergerData.count_num(1, 12), font=('Arial', 10))
@@ -108,12 +110,17 @@ class ViewingSchedule(tk.Toplevel):  # просмотр расписания
         self.text.place(x=10, y=100, width=410, height=220)
 
         MainMenu.button(self, 'Назад', self.destroy).place(x=10, y=330, width=80, height=20)
-        MainMenu.button(self, 'Удалить', self.destroy).place(x=160, y=330, width=80, height=20)
+        MainMenu.button(self, 'Удалить', self.delete).place(x=160, y=330, width=80, height=20)
         MainMenu.button(self, 'Добавить', self.examination).place(x=250, y=330, width=80, height=20)
         MainMenu.button(self, 'Искать', self.search).place(x=340, y=330, width=80, height=20)
 
+    def open_window4(self):
+        calendar = Calendar(self)
+        calendar.grab_set()
+
     def delete(self):  # удаляет маршрут, но не удаляет поезд
-        pass
+        self.parent.mainLogic.delete_schedule(self.route)
+        self.update()
 
     def update(self):  # обновить
         self.text.delete('1.0', 'end')  # удалили предыдущий текст в текстовом окне
@@ -127,15 +134,23 @@ class ViewingSchedule(tk.Toplevel):  # просмотр расписания
 
     def search(self):  # поиск
         if self.combo1.get() and self.combo2.get() and self.combo3.get() and self.combo3_1.get():
+            self.text.delete('1.0', 'end')  # удалили предыдущий текст в текстовом окне
+            can_not = True
             data = datetime.date(int(self.value_year.get()), int(self.combo3_1.get()), int(self.combo3.get()))
-            for key in self.dict_schedule.keys():
-                if self.dict_schedule[key][1] == self.combo1.get() and self.dict_schedule[key][4] == self.combo2.get() and self.dict_schedule[key][2] == str(data):
-                    otkuda = self.dict_schedule[key][1] + ' - ' + self.dict_schedule[key][2] + ' - ' + \
-                             self.dict_schedule[key][3]
-                    kuda = self.dict_schedule[key][4] + ' - ' + self.dict_schedule[key][5] + ' - ' + \
-                           self.dict_schedule[key][6]
-                    self.text.delete('1.0', 'end')  # удалили предыдущий текст в текстовом окне
-                    self.text.insert('end', f' {otkuda} \n {kuda} \n Время в пути - {self.dict_schedule[key][7]} \n')
+            for key, value in self.dict_schedule.items():
+                if value[1] == self.combo1.get() and value[4] == self.combo2.get() and value[2] == str(data):
+                    self.route = key
+                    otkuda = value[1] + ' - ' + value[2] + ' - ' + value[3]
+                    kuda = value[4] + ' - ' + value[5] + ' - ' + value[6]
+                    self.text.insert('end', f'{value[0]} - {otkuda} \n'
+                                            f'              {kuda} \n'
+                                            f'              Время в пути - {value[7]} \n')  # выводим строку
+                    self.text.insert('end', '\n')
+                    can_not = False
+                    break
+            if can_not:
+                print('erv')
+                self.text.insert('end', f' Ничего не найдено')  # выводим строку
 
     def examination(self):  # проверка на свободные поезда
         for key in self.dict_train.keys():
@@ -198,6 +213,74 @@ class ViewingSchedule(tk.Toplevel):  # просмотр расписания
             self.update()
             self.window_train_choose.destroy()
             self.window_schedule.destroy()
+
+
+class Calendar(tk.Toplevel):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.title('Calendar')
+        self.days = []  # в дальнейшем в нем будут храниться поля таблицы. Каждое такое поле соответствует определенному дню.
+        self.now = datetime.datetime.now()  # текущая дата
+        self.year = self.now.year  # год календаря который в данный момент отображается
+        self.month = self.now.month  # месяц календаря которых в данный момент отображается
+
+        prew_button = tk.Button(self, text='<', command=self.prew)
+        prew_button.grid(row=0, column=0, sticky='nsew')
+        next_button = tk.Button(self, text='>', command=self.next)
+        next_button.grid(row=0, column=6, sticky='nsew')
+        self.info_label = tk.Label(self, text='0', width=1, height=1,
+                              font=('Verdana', 16, 'bold'), fg='blue')
+        self.info_label.grid(row=0, column=1, columnspan=5, sticky='nsew')
+
+        for n in range(7):
+            lbl = tk.Label(self, text=calendar.day_abbr[n], width=1, height=1,
+                           font=('Verdana', 10, 'normal'), fg='darkblue')
+            lbl.grid(row=1, column=n, sticky='nsew')
+        for row in range(6):
+            for col in range(7):
+                lbl = tk.Label(self, text='0', width=4, height=2,
+                               font=('Arial', 13, 'bold'))
+                lbl.grid(row=row + 2, column=col, sticky='nsew')
+                self.days.append(lbl)
+        self.fill()
+
+    def prew(self):  # вызывается при нажатии на клавишу '<' смены месяца
+        self.month -= 1
+        if self.month == 0:
+            self.month = 12
+            self.year -= 1
+        self.fill()
+
+    def next(self):  # вызывается при нажатии на клавишу '>' смены месяца
+        self.month += 1
+        if self.month == 13:
+            self.month = 1
+            self.year += 1
+        self.fill()
+
+    def fill(self):  # перерисовывает календарь.
+        self.info_label['text'] = calendar.month_name[self.month] + ', ' + str(self.year)  # наименование месяца и год
+        month_days = calendar.monthrange(self.year, self.month)[1]
+        if self.month == 1:
+            prew_month_days = calendar.monthrange(self.year - 1, 12)[1]  # Вычисляем количество дней в предыдущем месяце
+        else:
+            prew_month_days = calendar.monthrange(self.year, self.month - 1)[1]
+        week_day = calendar.monthrange(self.year, self.month)[0]  # номер дня недели первого числа месяца
+        for n in range(month_days):
+            self.days[n + week_day]['text'] = n + 1  # заполняем номера дней выбранного месяца
+            self.days[n + week_day]['fg'] = 'black'  # отображать будем их черным цветом
+            if self.year == self.now.year and self.month == self.now.month and n == self.now.day:
+                self.days[n + week_day]['background'] = 'green'  # если это текущий день, то его фон делаем зелёным
+            else:
+                self.days[n + week_day]['background'] = 'lightgray'  # иначе светло-серым
+        for n in range(week_day):
+            self.days[week_day - n - 1]['text'] = prew_month_days - n  # заполняем числа предыдущего месяца
+            self.days[week_day - n - 1]['fg'] = 'gray'  # отображать будем их серым цветом
+            self.days[week_day - n - 1]['background'] = '#f3f3f3'
+        for n in range(6 * 7 - month_days - week_day):
+            self.days[week_day + month_days + n]['text'] = n + 1  # заполняем числа следующего месяца
+            self.days[week_day + month_days + n]['fg'] = 'gray'  # отображать будем их серым цветом
+            self.days[week_day + month_days + n]['background'] = '#f3f3f3'
 
 
 """Просмотр поездов"""
