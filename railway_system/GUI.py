@@ -70,151 +70,149 @@ class ViewingSchedule(Toplevel):  # просмотр расписания
             self.list_city.append(keys)
         self.dict_train = self.parent.mainLogic.dict_train  # сохранили словарь с поездами
         self.dict_schedule = self.parent.mainLogic.dict_schedule  # сохранили словарь с маршрутами
-        self.list_id_train = list()  # создали список с id поездов, у которых есть маршрут
-        for key in self.dict_schedule.keys():
-            self.list_id_train.append(self.dict_schedule[key][0])  # заполнили его
+        self.list_train_no_schedule = list()  # создали список с id поездов, у которых нет маршрута
         self.value_year = StringVar(self, '2023')  # в каком году
+        for key in self.dict_train.keys():
+            isBi = True
+            for value in self.dict_schedule.values():
+                if key == value[0]:
+                    isBi = False
+            if isBi:
+                self.list_train_no_schedule.append(key)  # помещаем поезда в список у которых нет маршрутов
 
         self.title('Просмотр расписания')
         self.geometry(f'430x360+500+50')
-        # self.window_schedule = None  # окно для регистрации маршрута
-        # self.dispatch_time_hours = None  # время отправки (часы)
-        # self.dispatch_time_minutes = None  # время отправки (минуты)
-        # self.window_train_choose = None  # окно для выбора поездов при регистрации нового маршрута
-        # self.train = StringVar()  # тот самый поезд которого выберет пользователь
-        # self.route = None  # выбранный пользователем маршрут
 
         MainMenu.label(self, text='Откуда:').place(x=10, y=10, width=65, height=20)
-        self.otkuda = ttk.Combobox(self, values=self.list_city, font=('Arial', 10))
-        self.otkuda.place(x=190, y=10, width=230, height=20)
+        self.start = ttk.Combobox(self, values=self.list_city, font=('Arial', 10))
+        self.start.place(x=190, y=10, width=230, height=20)
 
         MainMenu.label(self, text='Куда:').place(x=10, y=40, width=50, height=20)
-        self.kuda = ttk.Combobox(self, values=self.list_city, font=('Arial', 10))
-        self.kuda.place(x=190, y=40, width=230, height=20)
+        self.finish = ttk.Combobox(self, values=self.list_city, font=('Arial', 10))
+        self.finish.place(x=190, y=40, width=230, height=20)
 
         MainMenu.label(self, text='Когда:').place(x=10, y=70, width=60, height=20)
-        MainMenu.button(self, 'V', self.open_window4).place(x=140, y=70, width=40, height=20)
+        MainMenu.button(self, 'V', self.calendar).place(x=140, y=70, width=40, height=20)
         self.dispatch_day = ttk.Combobox(self, values=MergerData.count_num(1, 31), font=('Arial', 10))
         self.dispatch_day.place(x=190, y=70, width=40, height=20)  # день отправки
         self.dispatch_month = ttk.Combobox(self, values=MergerData.count_num(1, 12), font=('Arial', 10))
         self.dispatch_month.place(x=230, y=70, width=40, height=20)  # месяц отправки
         MainMenu.entry(self, self.value_year).place(x=270, y=70, width=40, height=20)  # год отправки
 
+        MainMenu.button(self, '⟲', self.update).place(x=330, y=70, width=20, height=20)
+        MainMenu.button(self, 'Поиск', self.search).place(x=360, y=70, width=60, height=20)
+
+        self.text = MainMenu.text(self)
         self.update()
+        self.text.place(x=10, y=100, width=410, height=220)
 
         MainMenu.button(self, 'Назад', self.destroy).place(x=10, y=330, width=80, height=20)
-        MainMenu.button(self, 'Удалить', self.delete).place(x=160, y=330, width=80, height=20)
-        MainMenu.button(self, 'Добавить', self.examination).place(x=250, y=330, width=80, height=20)
-        MainMenu.button(self, 'Искать', self.search).place(x=340, y=330, width=80, height=20)
+        MainMenu.button(self, 'Удалить', self.delete).place(x=250, y=330, width=80, height=20)
+        MainMenu.button(self, 'Добавить', self.examination).place(x=340, y=330, width=80, height=20)
 
-    def open_window4(self):
+    def calendar(self):
         calendar = Calendar(self)
         calendar.grab_set()
 
+    def sample(self):  # выбор маршрута, который указал пользователь
+        if self.start.get() and self.finish.get() and self.dispatch_day.get() and self.dispatch_month.get():
+            data = datetime.date(int(self.value_year.get()), int(self.dispatch_month.get()), int(self.dispatch_day.get()))
+            for key, value in self.dict_schedule.items():
+                if value[1] == self.start.get() and value[4] == self.finish.get() and value[2] == str(data):
+                    route = key
+                    return route
+
     def delete(self):  # удаляет маршрут, но не удаляет поезд
-        print(self.route)
-        self.parent.mainLogic.delete_schedule(self.route)
-        self.update()
+        route = self.sample()  # вернули ключ выбранного пользователем маршрута
+        print(route)
+        if route:
+            self.parent.mainLogic.delete_schedule(route)
+            self.update()
 
     def update(self):  # обновить
-        listbox_city = Variable(value=self.list_city)
-        text = Listbox(self, font=('Arial', 13))
-        for i in self.dict_schedule:  # проходим циклом по словарю с маршрутами
-            otkuda = self.dict_schedule[i][1] + ' - ' + self.dict_schedule[i][2] + ' - ' + self.dict_schedule[i][3]
-            kuda = self.dict_schedule[i][4] + ' - ' + self.dict_schedule[i][5] + ' - ' + self.dict_schedule[i][6]
-            route = f'{otkuda} \n {kuda} \n Время в пути - {self.dict_schedule[i][7]} \n'
-            text.insert(i, route)  # выводим строку
-            #text.inser
-        text.place(x=10, y=100, width=410, height=220)
-        # self.text.delete('1.0', 'end')  # удалили предыдущий текст в текстовом окне
-        # for value in self.dict_schedule.values():  # проходим циклом по словарю с маршрутами
-        #     otkuda = value[1] + ' - ' + value[2] + ' - ' + value[3]
-        #     kuda = value[4] + ' - ' + value[5] + ' - ' + value[6]
-        #     self.text.insert('end', f'{value[0]} - {otkuda} \n'
-        #                             f'              {kuda} \n'
-        #                             f'              Время в пути - {value[7]} \n')  # выводим строку
-        #     self.text.insert('end', '\n')
+        self.text.delete('1.0', 'end')  # удалили предыдущий текст в текстовом окне
+        for value in self.dict_schedule.values():  # проходим циклом по словарю с маршрутами
+            start_datetime = value[1] + ' - ' + value[2] + ' - ' + value[3]
+            finish_datetime = value[4] + ' - ' + value[5] + ' - ' + value[6]
+            self.text.insert('end', f'{value[0]} - {start_datetime} \n'
+                                    f'              {finish_datetime} \n'
+                                    f'              Время в пути - {value[7]} \n')  # выводим строку
 
     def search(self):  # поиск
-        if self.otkuda.get() and self.kuda.get() and self.dispatch_day.get() and self.dispatch_month.get():
+        route = self.sample()
+        if route:
             self.text.delete('1.0', 'end')  # удалили предыдущий текст в текстовом окне
-            can_not = True
-            data = datetime.date(int(self.value_year.get()), int(self.combo3_1.get()), int(self.combo3.get()))
-            for key, value in self.dict_schedule.items():
-                if value[1] == self.combo1.get() and value[4] == self.combo2.get() and value[2] == str(data):
-                    route = key
-                    otkuda = value[1] + ' - ' + value[2] + ' - ' + value[3]
-                    kuda = value[4] + ' - ' + value[5] + ' - ' + value[6]
-                    self.text.insert('end', f'{value[0]} - {otkuda} \n'
-                                            f'              {kuda} \n'
-                                            f'              Время в пути - {value[7]} \n')  # выводим строку
-                    self.text.insert('end', '\n')
-                    can_not = False
-                    break
-            if can_not:
-                self.text.insert('end', f' Ничего не найдено')  # выводим строку
+            start_datetime = self.dict_schedule[route][1] + ' - ' + self.dict_schedule[route][2] + ' - ' + self.dict_schedule[route][3]
+            finish_datetime = self.dict_schedule[route][4] + ' - ' + self.dict_schedule[route][5] + ' - ' + self.dict_schedule[route][6]
+            self.text.insert('end', f'{self.dict_schedule[route][0]} - {start_datetime} \n'
+                                    f'              {finish_datetime} \n'
+                                    f'              Время в пути - {self.dict_schedule[route][7]} \n')  # выводим строку
+        else:
+            self.text.delete('1.0', 'end')  # удалили предыдущий текст в текстовом окне
+            self.text.insert('end', f' Ничего не найдено')  # выводим строку
 
     def examination(self):  # проверка на свободные поезда
-        for key in self.dict_train.keys():
-            if key not in self.dict_schedule.keys():  # есть ли нет первичного ключа поезда среди вторичных ключей маршрутов
-                return self.route_registration()
+        if len(self.list_train_no_schedule) > 0:
+            return self.route_registration()
         self.text.delete('1.0', 'end')  # иначе удалили предыдущий текст в текстовом окне
         self.text.insert('end', f' Нет свободного поезда. \n')
 
     def route_registration(self):  # создали окно для регистрации маршрута
-        self.window_schedule = MainMenu.window()
+        window_schedule = MainMenu.window()
+        value_year = StringVar(self, '2023')  # в каком году
 
-        MainMenu.label(self.window_schedule, text='Откуда:').place(x=10, y=40, width=65, height=20)
-        self.combo1 = ttk.Combobox(self.window_schedule, values=self.parent.list_city, font=('Arial', 10))
-        self.combo1.place(x=190, y=40, width=230, height=20)
+        MainMenu.label(window_schedule, text='Откуда:').place(x=10, y=40, width=65, height=20)
+        start = ttk.Combobox(window_schedule, values=self.list_city, font=('Arial', 10))
+        start.place(x=190, y=40, width=230, height=20)
 
-        MainMenu.label(self.window_schedule, text='Куда:').place(x=10, y=70, width=50, height=20)
-        self.combo2 = ttk.Combobox(self.window_schedule, values=self.parent.list_city, font=('Arial', 10))
-        self.combo2.place(x=190, y=70, width=230, height=20)
+        MainMenu.label(window_schedule, text='Куда:').place(x=10, y=70, width=50, height=20)
+        finish = ttk.Combobox(window_schedule, values=self.list_city, font=('Arial', 10))
+        finish.place(x=190, y=70, width=230, height=20)
 
-        MainMenu.label(self.window_schedule, text='Дата отправления:').place(x=10, y=100, width=150, height=20)
-        self.combo3 = ttk.Combobox(self.window_schedule, values=MergerData.count_num(1, 31), font=('Arial', 10))
-        self.combo3.place(x=190, y=100, width=40, height=20)
-        self.combo3_1 = ttk.Combobox(self.window_schedule, values=MergerData.count_num(1, 12), font=('Arial', 10))
-        self.combo3_1.place(x=230, y=100, width=40, height=20)
-        MainMenu.entry(self.window_schedule, self.value_year).place(x=270, y=100, width=40, height=20)
+        MainMenu.label(window_schedule, text='Дата отправления:').place(x=10, y=100, width=150, height=20)
+        data_day = ttk.Combobox(window_schedule, values=MergerData.count_num(1, 31), font=('Arial', 10))
+        data_day.place(x=190, y=100, width=40, height=20)
+        data_month = ttk.Combobox(window_schedule, values=MergerData.count_num(1, 12), font=('Arial', 10))
+        data_month.place(x=230, y=100, width=40, height=20)
+        MainMenu.entry(window_schedule, value_year).place(x=270, y=100, width=40, height=20)
 
-        MainMenu.label(self.window_schedule, text='Время отправки:').place(x=10, y=130, width=130, height=20)
-        self.combo41 = ttk.Combobox(self.window_schedule, values=MergerData.count_num(0, 24), font=('Arial', 10))
-        self.combo41.place(x=190, y=130, width=40, height=20)
-        self.combo4_1 = ttk.Combobox(self.window_schedule, values=MergerData.count_num(0, 60), font=('Arial', 10))
-        self.combo4_1.place(x=230, y=130, width=40, height=20)
+        MainMenu.label(window_schedule, text='Время отправки:').place(x=10, y=130, width=130, height=20)
+        time_hours = ttk.Combobox(window_schedule, values=MergerData.count_num(0, 24), font=('Arial', 10))
+        time_hours.place(x=190, y=130, width=40, height=20)
+        time_minutes = ttk.Combobox(window_schedule, values=MergerData.count_num(0, 60), font=('Arial', 10))
+        time_minutes.place(x=230, y=130, width=40, height=20)
 
-        MainMenu.button(self.window_schedule, 'Назад', self.window_schedule.destroy).place(x=10, y=330, width=90, height=20)
-        MainMenu.button(self.window_schedule, 'Сохранить', self.wind_train_choose).place(x=330, y=330, width=90, height=20)
+        MainMenu.button(window_schedule, 'Назад', window_schedule.destroy).place(x=10, y=330, width=90, height=20)
+        MainMenu.button(window_schedule, 'Сохранить', lambda: self.wind_train_choose(window_schedule, start, finish, data_day, data_month, value_year, time_hours, time_minutes)).place(x=330, y=330, width=90, height=20)
 
-    def wind_train_choose(self):
-        if self.combo1.get() and self.combo2.get() and self.combo3.get() and self.combo3_1.get() and str(self.combo41.get()) and str(self.combo4_1.get()):
-            self.window_train_choose = MainMenu.window()
+    def wind_train_choose(self, window_schedule, start, finish, data_day, data_month, value_year, time_hours, time_minutes):
+        if start.get() and finish.get() and data_day.get() and data_month.get() and str(time_hours.get()) and str(time_minutes.get()):
+            window_train_choose = MainMenu.window()
 
-            MainMenu.label(self.window_train_choose, text='Выберите поезд,\n который поедет по новому маршруту').place(x=10, y=40, width=410, height=50)
+            MainMenu.label(window_train_choose, text='Выберите поезд,\n который поедет по новому маршруту').place(x=10, y=40, width=410, height=50)
 
-            MainMenu.entry(self.window_train_choose, self.train).place(x=145, y=95, width=140, height=20)
-
-            text = MainMenu.text(self.window_train_choose)
-            for key, value in self.dict_train.items():
-                if key not in self.list_id_train:  # если ли нет первичного ключа поезда среди вторичных ключей маршрутов
-                    stroka = key + ' - ' + value[0] + ' - ' + value[1] + ' - ' + \
-                             str(value[2]) + ' - ' + str(value[3]) + ' - ' + str(value[4])
-                    text.insert('end', f'{stroka}\n')  # выводим строку
+            text = Listbox(window_train_choose, font=('Arial', 13))
+            for key, value in self.dict_train.items():  # проходим циклом по словарю с маршрутами
+                if key in self.list_train_no_schedule:  # если ли нет первичного ключа поезда среди вторичных ключей маршрутов
+                    train = key + ' - ' + value[0] + ' - ' + value[1] + ' - ' + str(value[2]) \
+                            + ' - ' + str(value[3]) + ' - ' + str(value[4])
+                    text.insert(0, train)  # выводим строку
             text.place(x=10, y=130, width=410, height=190)
 
-            MainMenu.button(self.window_train_choose, 'Назад', self.window_train_choose.destroy).place(x=10, y=330, width=90, height=20)
-            MainMenu.button(self.window_train_choose, 'Сохранить', self.save).place(x=330, y=330, width=90, height=20)
+            MainMenu.button(window_train_choose, 'Назад', window_train_choose.destroy).place(x=10, y=330, width=90, height=20)
+            MainMenu.button(window_train_choose, 'Сохранить', lambda: self.save(window_schedule, window_train_choose, text, start, finish, data_day, data_month, value_year, time_hours, time_minutes)).place(x=330, y=330, width=90, height=20)
 
-    def save(self):
-        if self.train.get():  # добавить, чтобы проверка осуществлялась согласно списку существующих поездов
-            data_time = datetime.datetime(int(self.value_year.get()), int(self.combo3_1.get()), int(self.combo3.get()),
-                                          int(self.combo41.get()), int(self.combo4_1.get()))
-            self.parent.mainLogic.create_schedule(self.combo1.get(), self.combo2.get(), data_time, self.train.get())  # создали маршрут
+    def save(self, window_schedule, window_train_choose, text, start, finish, data_day, data_month, value_year, time_hours, time_minutes):
+        selection = text.curselection()
+        print(self.list_train_no_schedule[selection[0]])
+        if len(selection) > 0:  # добавить, чтобы проверка осуществлялась согласно списку существующих поездов
+            data_time = datetime.datetime(int(value_year.get()), int(data_month.get()), int(data_day.get()),
+                                          int(time_hours.get()), int(time_minutes.get()))
+            self.parent.mainLogic.create_schedule(start.get(), finish.get(), data_time, self.list_train_no_schedule[selection[0]])  # создали маршрут
+            self.list_train_no_schedule.pop(selection[0])
             self.update()
-            self.window_train_choose.destroy()
-            self.window_schedule.destroy()
+            window_train_choose.destroy()
+            window_schedule.destroy()
 
 
 class Calendar(Toplevel):
@@ -230,18 +228,15 @@ class Calendar(Toplevel):
         prew_button.grid(row=0, column=0, sticky='nsew')
         next_button = Button(self, text='>', command=self.next)
         next_button.grid(row=0, column=6, sticky='nsew')
-        self.info_label = Label(self, text='0', width=1, height=1,
-                              font=('Verdana', 16, 'bold'), fg='blue')
+        self.info_label = Label(self, text='0', width=1, height=1, font=('Verdana', 16, 'bold'), fg='blue')
         self.info_label.grid(row=0, column=1, columnspan=5, sticky='nsew')
 
         for n in range(7):
-            lbl = Label(self, text=calendar.day_abbr[n], width=1, height=1,
-                           font=('Verdana', 10, 'normal'), fg='darkblue')
+            lbl = Label(self, text=calendar.day_abbr[n], width=1, height=1, font=('Verdana', 10, 'normal'), fg='darkblue')
             lbl.grid(row=1, column=n, sticky='nsew')
         for row in range(6):
             for col in range(7):
-                lbl = Label(self, text='0', width=4, height=2,
-                               font=('Arial', 13, 'bold'))
+                lbl = Label(self, text='0', width=4, height=2, font=('Arial', 13, 'bold'))
                 lbl.grid(row=row + 2, column=col, sticky='nsew')
                 self.days.append(lbl)
         self.fill()
