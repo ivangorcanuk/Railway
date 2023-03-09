@@ -37,8 +37,6 @@ class MainLogic:
         else:
             train = Cargo(nickname, train_type, type_wagons, max_load, count_wagons, average_speed)
         self.dict_train[nickname] = (train_type, type_wagons, max_load, count_wagons, average_speed)
-        for key, value in self.dict_train.items():
-            print(key, value)
         #self.__sql.insert_train(train)  # сохранили в базу
 
     def create_schedule(self, otkuda, kuda, date_time, train_name):  # создаем расписание
@@ -49,23 +47,17 @@ class MainLogic:
         schedule = Schedule(otkuda, date_time.date(), date_time.time(),
                                             kuda, date_time_arrival.date(), date_time_arrival.time(), travel_time)
         id_schedule = WorkingUtils.id_installation(self.dict_schedule)
-        self.dict_schedule[id_schedule] = (id_schedule, train_name, otkuda, str(date_time.date()), str(date_time.time()),
+        self.dict_schedule[id_schedule] = (train_name, otkuda, str(date_time.date()), str(date_time.time()),
                                             kuda, str(date_time_arrival.date()), str(date_time_arrival.time()), str(travel_time))
-        for key, value in self.dict_schedule.items():
-            print(key, value)
-        #self.__sql.insert_schedule(id_schedule, train_name, schedule)  # сохранили в базу
+        self.__sql.insert_schedule(id_schedule, train_name, schedule)  # сохранили в базу
 
     def delete_train(self, nickname):  # удаляем поезд
-        self.__sql.delete('train', nickname)  # из базы
+        self.__sql.delete_train(nickname)  # из базы
         del self.dict_train[nickname]  # из словаря
-        for key, value in self.dict_train.items():
-            print(key, value)
 
     def delete_schedule(self, iD):  # удаляем поезд
-        self.__sql.delete('schedule', iD)  # из базы
+        self.__sql.delete_schedule(iD)  # из базы
         del self.dict_schedule[iD]  # из словаря
-        for key, value in self.dict_schedule.items():
-            print(key, value)
 
 
 class MergerData:

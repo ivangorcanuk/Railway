@@ -46,10 +46,10 @@ class DBhandler:
                              schedule.kuda, str(schedule.date_arrival), str(schedule.time_arrival), str(schedule.time_travel)))
         self.conn.commit()
 
-    def delete(self, table, iD):  # удалили поезд по его id
-        if table == 'train':
-            colum = 'nickname'
-        else:
-            colum = 'id'
-        self.cursor.execute(f'''DELETE FROM {table} WHERE {colum} = {iD} ''')
+    def delete_train(self, iD):  # удалили поезд по его id
+        self.cursor.execute(f'''DELETE FROM train WHERE nickname = '{iD}' ''')
+        self.conn.commit()
+
+    def delete_schedule(self, iD):  # удалили поезд по его id
+        self.cursor.execute(f'''DELETE FROM schedule WHERE id = '{iD}' ''')
         self.conn.commit()
